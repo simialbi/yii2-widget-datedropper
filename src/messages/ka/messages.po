@@ -1,0 +1,189 @@
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Jan"
+msgstr "იან"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Feb"
+msgstr "თებ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Mar"
+msgstr "მარტ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Apr"
+msgstr "აპრ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "May s"
+msgstr "მაი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Jun"
+msgstr "ივნ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Jul"
+msgstr "ივლ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Aug"
+msgstr "აგვ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Sep"
+msgstr "სექტ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Oct"
+msgstr "ოქტ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Nov"
+msgstr "ნოემბ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Dec"
+msgstr "დეკ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "January"
+msgstr "იანვარი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "February"
+msgstr "თებერვალი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "March"
+msgstr "მარტი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "April"
+msgstr "აპრილი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "May"
+msgstr "მაისი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "June"
+msgstr "ივნისი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "July"
+msgstr "ივლისი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "August"
+msgstr "აგვისტო"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "September"
+msgstr "სექტემბერი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "October"
+msgstr "ოქტომბერი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "November"
+msgstr "ნოემბერი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "December"
+msgstr "დეკემბერი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Sun"
+msgstr "კვ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Mon"
+msgstr "ორ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Tue"
+msgstr "სამ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Wed"
+msgstr "ოთხ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Thu"
+msgstr "ხუთ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Fri"
+msgstr "პარ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Sat"
+msgstr "შაბ"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Sunday"
+msgstr "კვირა"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Monday"
+msgstr "ორშაბათი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Tuesday"
+msgstr "სამშაბათი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Wednesday"
+msgstr "ოთხშაბათი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Thursday"
+msgstr "ხუთშაბათი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Friday"
+msgstr "პარასკევი"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Saturday"
+msgstr "შაბათი"

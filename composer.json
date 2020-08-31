@@ -1,0 +1,48 @@
+{
+    "name": "simialbi/yii2-widget-datedropper",
+    "type": "yii2-extension",
+    "description": "Yii 2 Widget for datedropper jquery plugin of felice gattuso",
+    "keywords": [
+        "yii2",
+        "datedropper",
+        "datepicker",
+        "picker"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "simialbi",
+            "email": "simi.albi@outlook.com"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/simialbi/yii2-widget-datedropper",
+        "issues": "https://github.com/simialbi/yii2-widget-datedropper/issues"
+    },
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=5.6",
+        "yiisoft/yii2": "^2.0.20",
+        "yiisoft/yii2-bootstrap4": "^2.0.4",
+        "simialbi/yii2-simialbi-base": ">=0.6 <1.0 | ^1.0.0"
+    },
+    "require-dev": {
+        "yiisoft/yii2-coding-standards": "~2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "simialbi\\yii2\\datedropper\\": "src"
+        }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ],
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}

@@ -1,0 +1,189 @@
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Jan"
+msgstr "Gen"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Feb"
+msgstr "Feb"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Mar"
+msgstr "Mar"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Apr"
+msgstr "Apr"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "May s"
+msgstr "Mag"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Jun"
+msgstr "Giu"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Jul"
+msgstr "Lug"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Aug"
+msgstr "Ago"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Sep"
+msgstr "Set"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Oct"
+msgstr "Ott"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Nov"
+msgstr "Nov"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Dec"
+msgstr "Dic"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "January"
+msgstr "Gennaio"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "February"
+msgstr "Febbraio"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "March"
+msgstr "Marzo"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "April"
+msgstr "Aprile"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "May"
+msgstr "Maggio"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "June"
+msgstr "Giugno"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "July"
+msgstr "Luglio"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "August"
+msgstr "Agosto"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "September"
+msgstr "Settembre"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "October"
+msgstr "Ottobre"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "November"
+msgstr "Novembre"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "December"
+msgstr "Dicembre"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Sun"
+msgstr "D"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Mon"
+msgstr "L"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Tue"
+msgstr "M"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Wed"
+msgstr "M"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Thu"
+msgstr "G"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Fri"
+msgstr "V"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Sat"
+msgstr "S"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Sunday"
+msgstr "Domenica"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Monday"
+msgstr "Lunedì"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Tuesday"
+msgstr "Martedì"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Wednesday"
+msgstr "Mercoledì"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Thursday"
+msgstr "Giovedì"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Friday"
+msgstr "Venerdì"
+
+#: Datedroppper.php
+msgctxt "simialbi/datedropper/datedropper"
+msgid "Saturday"
+msgstr "Sabato"
