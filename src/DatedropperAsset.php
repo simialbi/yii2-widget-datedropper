@@ -18,6 +18,13 @@ class DatedropperAsset extends AssetBundle
     /**
      * {@inheritDoc}
      */
+    public $css = [
+        'css/datedroppper.css'
+    ];
+
+    /**
+     * {@inheritDoc}
+     */
     public $js = [
         'js/datedropper.pro.min.js'
     ];
