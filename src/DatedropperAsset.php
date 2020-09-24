@@ -28,4 +28,11 @@ class DatedropperAsset extends AssetBundle
     public $js = [
         'js/datedropper.pro.min.js'
     ];
+
+    /**
+     * {@inheritDoc}
+     */
+    public $depends = [
+        'yii\web\JqueryAsset'
+    ];
 }
