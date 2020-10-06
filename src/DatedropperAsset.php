@@ -19,7 +19,7 @@ class DatedropperAsset extends AssetBundle
      * {@inheritDoc}
      */
     public $css = [
-        'css/datedroppper.css'
+        'css/datedropper.css'
     ];
 
     /**
