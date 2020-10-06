@@ -26,7 +26,7 @@ class DatedropperAsset extends AssetBundle
      * {@inheritDoc}
      */
     public $js = [
-        'js/datedropper.pro.min.js'
+        'js/datedropper.js'
     ];
 
     /**
