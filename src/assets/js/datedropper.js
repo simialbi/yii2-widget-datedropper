@@ -1,1021 +1,711 @@
-(function ($) {
-    var
-        // CSS EVENT DETECT
-        csse = {
-            t: 'transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd',
-            a: 'webkitAnimationEnd mozAnimationEnd oAnimationEnd oanimationend animationend'
-        },
-        // I18N
-        i18n = {},
-
-        // MAIN VARS
-
-        pickers = {},
-        picker = null,
-        picker_ctrl = false,
-        pick_dragged = null,
-        pick_drag_offset = null,
-        pick_drag_temp = null,
-
-        // CHECK FUNCTIONS
-
-        is_click = false,
-        is_ie = function () {
-            var
-                n = navigator.userAgent.toLowerCase();
-            return (n.indexOf('msie') != -1) ? parseInt(n.split('msie')[1]) : false;
-        },
-        is_touch = function () {
-            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                return true;
-            } else {
-                return false;
-            }
-        },
-        is_fx_mobile = function () {
-            if (picker && pickers[picker.id].fx && !pickers[picker.id].fxmobile) {
-                if ($(window).width() < 480) {
-                    picker.element.removeClass('picker-fxs');
-                } else {
-                    picker.element.addClass('picker-fxs');
-                }
-            }
-        },
-        is_jumpable = function () {
-            if (pickers[picker.id].jump >= pickers[picker.id].key.y.max - pickers[picker.id].key.y.min) {
-                return false;
-            } else {
-                return true;
-            }
-        },
-        is_locked = function () {
-            var
-                unix_current = get_unix(get_current_full()),
-                unix_today = get_unix(get_today_full());
-
-            if (pickers[picker.id].lock) {
-                if (pickers[picker.id].lock == 'from') {
-                    if (unix_current < unix_today) {
-                        picker_alrt();
-                        picker.element.addClass('picker-lkd');
-                        return true;
-                    } else {
-                        picker.element.removeClass('picker-lkd');
-                        return false;
+(function($) {
+    var p = {},
+        o = null,
+        a = null,
+        n = null,
+        s = null,
+        d = null,
+        e = "transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd",
+        r = "webkitAnimationEnd mozAnimationEnd oAnimationEnd oanimationend animationend",
+        l = {
+            init: function(r) {
+                return $(this).each(function() {
+                    r && r.roundtrip && !$(this).attr("data-dd-roundtrip") && $(this).attr("data-dd-roundtrip", r.roundtrip)
+                }), $(this).each(function() {
+                    if (!$(this).hasClass("picker-trigger")) {
+                        var e = $(this),
+                            i = "datedropper-" + Object.keys(p).length;
+                        e.attr("data-datedropper-id", i).addClass("picker-trigger");
+                        var t = {
+                            identifier: i,
+                            selector: e,
+                            jump: 10,
+                            maxYear: !1,
+                            minYear: !1,
+                            format: "m/d/Y",
+                            lang: "en",
+                            lock: !1,
+                            theme: "primary",
+                            disabledDays: !1,
+                            large: !1,
+                            largeDefault: !1,
+                            fx: !0,
+                            fxMobile: !0,
+                            defaultDate: null,
+                            modal: !1,
+                            hideDay: !1,
+                            hideMonth: !1,
+                            hideYear: !1,
+                            enabledDays: !1,
+                            largeOnly: !1,
+                            roundtrip: !1,
+                            eventListener: e.is("input") ? "focus" : "click",
+                            trigger: !1,
+                            minDate: !1,
+                            maxDate: !1,
+                            autofill: !0,
+                            autoIncrease: !0,
+                            showOnlyEnabledDays: !1,
+                            changeValueTo: !1,
+                            startFromMonday: !0
+                        };
+                        p[i] = $.extend(!0, {}, t, r, y(e)), R(p[i])
                     }
-                }
-                if (pickers[picker.id].lock == 'to') {
-                    if (unix_current > unix_today) {
-                        picker_alrt();
-                        picker.element.addClass('picker-lkd');
-                        return true;
-                    } else {
-                        picker.element.removeClass('picker-lkd');
-                        return false;
-                    }
-                }
-            }
-
-            if (pickers[picker.id].disabledays) {
-                if (pickers[picker.id].disabledays.indexOf(unix_current) != -1) {
-                    picker_alrt();
-                    picker.element.addClass('picker-lkd');
-                    return true;
-                } else {
-                    picker.element.removeClass('picker-lkd');
-                    return false;
-                }
-            }
-        },
-        is_int = function (n) {
-            return n % 1 === 0;
-        },
-        is_date = function (value) {
-            var
-                format = /(^\d{1,4}[\.|\\/|-]\d{1,2}[\.|\\/|-]\d{1,4})(\s*(?:0?[1-9]:[0-5]|1(?=[012])\d:[0-5])\d\s*[ap]m)?$/;
-            return format.test(value);
-        },
-
-        // REST FUNCTIONS
-
-        get_current = function (k) {
-            return parseInt(pickers[picker.id].key[k].current);
-        },
-        get_today = function (k) {
-            return parseInt(pickers[picker.id].key[k].today);
-        },
-        get_today_full = function () {
-            return get_today('m') + '/' + get_today('d') + '/' + get_today('y');
-        },
-        get_current_full = function () {
-            return get_current('m') + '/' + get_current('d') + '/' + get_current('y');
-        },
-        get_jumped = function (k, val) {
-            var
-                a = [],
-                key_values = pickers[picker.id].key[k];
-            for (var i = key_values.min; i <= key_values.max; i++) {
-                if (i % val == 0) {
-                    a.push(i);
-                }
-            }
-            return a;
-        },
-        get_closest_jumped = function (int, arr) {
-            var c = arr[0];
-            var d = Math.abs(int - c);
-            for (var i = 0; i < arr.length; i++) {
-                var n = Math.abs(int - arr[i]);
-                if (n < d) {
-                    d = n;
-                    c = arr[i];
-                }
-            }
-            return c;
-        },
-        get_clear = function (k, n) {
-            var
-                key_values = pickers[picker.id].key[k];
-            if (n > key_values.max) {
-                return get_clear(k, (n - key_values.max) + (key_values.min - 1));
-            } else if (n < key_values.min) {
-                return get_clear(k, (n + 1) + (key_values.max - key_values.min));
-            } else {
-                return n;
-            }
-        },
-        get_days_array = function () {
-            if (i18n[pickers[picker.id].lang].gregorian) {
-                return [1, 2, 3, 4, 5, 6, 0];
-            } else {
-                return [0, 1, 2, 3, 4, 5, 6];
-            }
-        },
-        get_ul = function (k) {
-            return get_picker_els('ul.pick[data-k="' + k + '"]');
-        },
-        get_eq = function (k, d) {
-            ul = get_ul(k);
-            var
-                o = [];
-
-            ul.find('li').each(function () {
-                o.push($(this).attr('value'));
-            });
-
-            if (d == 'last') {
-                return o[o.length - 1];
-            } else {
-                return o[0];
-            }
-
-        },
-        get_picker_els = function (el) {
-            if (picker) {
-                return picker.element.find(el);
-            }
-        },
-        get_unix = function (d) {
-            return Date.parse(d) / 1000;
-        },
-
-        // RENDER FUNCTIONS
-
-        picker_large_onoff = function () {
-            if (pickers[picker.id].large) {
-                picker.element.toggleClass('picker-lg');
-                picker_render_calendar();
-            }
-        },
-        picker_translate_onoff = function () {
-            get_picker_els('ul.pick.pick-l').toggleClass('visible');
-        },
-        picker_offset = function () {
-            if (!picker.element.hasClass('picker-modal')) {
-                var
-                    input = picker.input,
-                    left = input.offset().left + input.outerWidth() / 2,
-                    top = input.offset().top + input.outerHeight();
-                picker.element.css({
-                    'left': left,
-                    'top': top
-                });
-            }
-        },
-        picker_translate = function (v) {
-            pickers[picker.id].lang = Object.keys(i18n)[v];
-            picker_set_lang();
-            picker_set();
-        },
-        picker_set_lang = function () {
-            var
-                picker_day_offset = get_days_array();
-            get_picker_els('.pick-lg .pick-lg-h li').each(function (i) {
-                $(this).html(i18n[pickers[picker.id].lang].weekdays.short[picker_day_offset[i]]);
-            });
-            get_picker_els('ul.pick.pick-m li').each(function () {
-                $(this).html(i18n[pickers[picker.id].lang].months.short[$(this).attr('value') - 1]);
-            });
-        },
-        picker_show = function () {
-            picker.element.addClass('picker-focus');
-        },
-        picker_hide = function () {
-            if (!is_locked()) {
-                picker.element.removeClass('picker-focus');
-                if (picker.element.hasClass('picker-modal')) {
-                    $('.picker-modal-overlay').addClass('tohide');
-                }
-                picker = null;
-            }
-            picker_ctrl = false;
-        },
-        picker_render_ul = function (k) {
-            var
-                ul = get_ul(k),
-                key_values = pickers[picker.id].key[k];
-
-            //CURRENT VALUE
-            pickers[picker.id].key[k].current = key_values.today < key_values.min && key_values.min || key_values.today;
-
-            for (i = key_values.min; i <= key_values.max; i++) {
-                var
-                    html = i;
-
-                if (k == 'm') {
-                    html = i18n[pickers[picker.id].lang].months.short[i - 1];
-                }
-                if (k == 'l') {
-                    html = i18n[Object.keys(i18n)[i]].name;
-                }
-
-                html += k == 'd' ? '<span></span>' : '';
-
-                $('<li>', {
-                    value: i,
-                    html: html
                 })
-                    .appendTo(ul);
-            }
-
-            //PREV BUTTON
-            $('<div>', {
-                class: 'pick-arw pick-arw-s1 pick-arw-l',
-                html: $('<i>', {
-                    class: 'pick-i-l'
+            },
+            show: function() {
+                return $(this).each(function() {
+                    H($(this))
                 })
-            })
-                .appendTo(ul);
-
-            //NEXT BUTTON
-            $('<div>', {
-                class: 'pick-arw pick-arw-s1 pick-arw-r',
-                html: $('<i>', {
-                    class: 'pick-i-r'
+            },
+            hide: function() {
+                return $(this).each(function(e) {
+                    var i = S($(this));
+                    i && B(i)
                 })
-            })
-                .appendTo(ul);
-
-            if (k == 'y') {
-
-                //PREV BUTTON
-                $('<div>', {
-                    class: 'pick-arw pick-arw-s2 pick-arw-l',
-                    html: $('<i>', {
-                        class: 'pick-i-l'
-                    })
+            },
+            destroy: function(i) {
+                return $(this).each(function() {
+                    var e = S($(this));
+                    e && (o && e.identifier == o.identifier && B(o), $(this).removeAttr("data-datedropper-id").removeClass("picker-trigger").off(e.eventListener), delete e, i && i())
                 })
-                    .appendTo(ul);
-
-                //NEXT BUTTON
-                $('<div>', {
-                    class: 'pick-arw pick-arw-s2 pick-arw-r',
-                    html: $('<i>', {
-                        class: 'pick-i-r'
-                    })
+            },
+            set: function(e) {
+                return $(this).each(function() {
+                    var t = S($(this));
+                    t && ($.each(e, function(e, i) {
+                        "true" == i && (i = !0), "false" == i && (i = !1), "roundtrip" != e ? t[e] = i : console.error("[DATEDROPPER] You can't set roundtrip after main initialization")
+                    }), t.selector.off(t.eventListener), t.trigger && $(t.trigger).off("click"), R(t), console.log(t), o && o.element == t.element && V(t))
                 })
-                    .appendTo(ul);
-
+            },
+            setDate: function(e) {
+                return $(this).each(function() {
+                    var t = S($(this));
+                    t && ($.each(e, function(e, i) {
+                        "y" == e && t.key[e] && i > t.key[e].max && (t.key[e].max = i), t.key[e].current = i
+                    }), o && o.element == t.element && V(t))
+                })
+            },
+            getDate: function(i) {
+                return $(this).each(function() {
+                    var e = S($(this));
+                    e && i && i(J(e))
+                })
             }
-
-            picker_ul_transition(k, get_current(k));
-
         },
-        picker_render_calendar = function () {
-
-            var
-                index = 0,
-                w = get_picker_els('.pick-lg-b');
-
-            w.find('li')
-                .empty()
-                .removeClass('pick-n pick-b pick-a pick-v pick-lk pick-sl pick-h')
-                .attr('data-value', '');
-
-            var
-                _C = new Date(get_current_full()),
-                _S = new Date(get_current_full()),
-                _L = new Date(get_current_full()),
-                _NUM = function (d) {
-                    var
-                        m = d.getMonth(),
-                        y = d.getFullYear();
-                    var l = ((y % 4) == 0 && ((y % 100) != 0 || (y % 400) == 0));
-                    return [31, (l ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m];
-                };
-
-            _L.setMonth(_L.getMonth() - 1);
-            _S.setDate(1);
-
-            var
-                o = _S.getDay() - 1;
-            if (o < 0) {
-                o = 6;
-            }
-            if (i18n[pickers[picker.id].lang].gregorian) {
-                o--;
-                if (o < 0) {
-                    o = 6;
-                }
-            }
-
-            //before
-            for (var i = _NUM(_L) - o; i <= _NUM(_L); i++) {
-                w.find('li').eq(index)
-                    .html(i)
-                    .addClass('pick-b pick-n pick-h');
-                index++;
-            }
-            //current
-            for (var i = 1; i <= _NUM(_S); i++) {
-                w.find('li').eq(index)
-                    .html(i)
-                    .addClass('pick-n pick-v')
-                    .attr('data-value', i);
-                index++;
-            }
-            //after
-            if (w.find('li.pick-n').length < 42) {
-                var
-                    e = 42 - w.find('li.pick-n').length;
-                for (var i = 1; i <= e; i++) {
-                    w.find('li').eq(index).html(i)
-                        .addClass('pick-a pick-n pick-h');
-                    index++;
-                }
-            }
-            if (pickers[picker.id].lock) {
-                if (pickers[picker.id].lock === 'from') {
-                    if (get_current('y') <= get_today('y')) {
-                        if (get_current('m') == get_today('m')) {
-                            get_picker_els('.pick-lg .pick-lg-b li.pick-v[data-value="' + get_today('d') + '"]')
-                                .prevAll('li')
-                                .addClass('pick-lk');
-                        } else {
-                            if (get_current('m') < get_today('m')) {
-                                get_picker_els('.pick-lg .pick-lg-b li')
-                                    .addClass('pick-lk');
-                            } else if (get_current('m') > get_today('m') && get_current('y') < get_today('y')) {
-                                get_picker_els('.pick-lg .pick-lg-b li')
-                                    .addClass('pick-lk');
-                            }
-                        }
-                    }
-                } else {
-                    if (get_current('y') >= get_today('y')) {
-                        if (get_current('m') == get_today('m')) {
-                            get_picker_els('.pick-lg .pick-lg-b li.pick-v[data-value="' + get_today('d') + '"]')
-                                .nextAll('li')
-                                .addClass('pick-lk');
-                        } else {
-                            if (get_current('m') > get_today('m')) {
-                                get_picker_els('.pick-lg .pick-lg-b li')
-                                    .addClass('pick-lk');
-                            } else if (get_current('m') < get_today('m') && get_current('y') > get_today('y')) {
-                                get_picker_els('.pick-lg .pick-lg-b li')
-                                    .addClass('pick-lk');
-                            }
-                        }
-                    }
-                }
-            }
-            if (pickers[picker.id].disabledays) {
-                $.each(pickers[picker.id].disabledays, function (i, v) {
-                    if (v && is_date(v)) {
-                        var
-                            d = new Date(v * 1000);
-                        if (d.getMonth() + 1 == get_current('m') && d.getFullYear() == get_current('y')) {
-                            get_picker_els('.pick-lg .pick-lg-b li.pick-v[data-value="' + d.getDate() + '"]')
-                                .addClass('pick-lk');
-                        }
-                    }
-                });
-            }
-
-            get_picker_els('.pick-lg-b li.pick-v[data-value=' + get_current('d') + ']').addClass('pick-sl');
-
+        k = !1,
+        m = function() {
+            var e = navigator.userAgent.toLowerCase();
+            return -1 != e.indexOf("msie") && parseInt(e.split("msie")[1])
         },
-        picker_fills = function () {
-
-            var
-                m = get_current('m'),
-                y = get_current('y'),
-                l = ((y % 4) == 0 && ((y % 100) != 0 || (y % 400) == 0));
-
-            pickers[picker.id].key['d'].max = [31, (l ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1];
-
-            if (get_current('d') > pickers[picker.id].key['d'].max) {
-                pickers[picker.id].key['d'].current = pickers[picker.id].key['d'].max;
-                picker_ul_transition('d', get_current('d'));
-            }
-
-            get_picker_els('.pick-d li')
-                .removeClass('pick-wke')
-                .each(function () {
-                    var
-                        d = new Date(m + '/' + $(this).attr('value') + '/' + y).getDay();
-
-                    $(this)
-                        .find('span')
-                        .html(i18n[pickers[picker.id].lang].weekdays.full[d]);
-
-                    if (d == 0 || d == 6) {
-                        $(this).addClass('pick-wke');
-                    }
-
-                });
-
-            if (picker.element.hasClass('picker-lg')) {
-                get_picker_els('.pick-lg-b li').removeClass('pick-wke');
-                get_picker_els('.pick-lg-b li.pick-v')
-                    .each(function () {
-                        var
-                            d = new Date(m + '/' + $(this).attr('data-value') + '/' + y).getDay();
-                        if (d == 0 || d == 6) {
-                            $(this).addClass('pick-wke');
-                        }
-
-                    });
-            }
-
+        f = function() {
+            return !!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
         },
-        picker_set = function () {
-            if (picker.element.hasClass('picker-lg')) {
-                picker_render_calendar();
-            }
-            picker_fills();
-            input_change_value();
+        b = function(e) {
+            e.fx && !e.fxMobile && ($(window).width() < 480 ? e.element.removeClass("picker-fxs") : e.element.addClass("picker-fxs"))
         },
-
-        // ACTION FUNCTIONS
-
-        picker_ul_transition = function (k, i) {
-
-            var
-                ul = get_ul(k);
-
-            ul.find('li').removeClass('pick-sl pick-bfr pick-afr');
-
-            if (i == get_eq(k, 'last')) {
-                var li = ul.find('li[value="' + get_eq(k, 'first') + '"]');
-                li.clone().insertAfter(ul.find('li[value=' + i + ']'));
-                li.remove();
-            }
-            if (i == get_eq(k, 'first')) {
-                var li = ul.find('li[value="' + get_eq(k, 'last') + '"]');
-                li.clone().insertBefore(ul.find('li[value=' + i + ']'));
-                li.remove();
-            }
-
-            ul.find('li[value=' + i + ']').addClass('pick-sl');
-            ul.find('li.pick-sl').nextAll('li').addClass('pick-afr');
-            ul.find('li.pick-sl').prevAll('li').addClass('pick-bfr');
-
+        g = function(e) {
+            return e % 1 == 0 && e
         },
-        picker_values_increase = function (k, v) {
-
-            var
-                key_values = pickers[picker.id].key[k];
-
-            if (v > key_values.max) {
-                if (k == 'd') {
-                    picker_ul_turn('m', 'right');
-                }
-                if (k == 'm') {
-                    picker_ul_turn('y', 'right');
-                }
-                v = key_values.min;
-            }
-            if (v < key_values.min) {
-                if (k == 'd') {
-                    picker_ul_turn('m', 'left');
-                }
-                if (k == 'm') {
-                    picker_ul_turn('y', 'left');
-                }
-                v = key_values.max;
-            }
-            pickers[picker.id].key[k].current = v;
-            picker_ul_transition(k, v);
-
-        },
-        picker_ul_turn = function (k, d) {
-            var
-                v = get_current(k);
-            if (d == 'right') {
-                v++;
-            } else {
-                v--;
-            }
-            picker_values_increase(k, v);
-        },
-        picker_alrt = function () {
-            picker.element
-                .addClass('picker-rmbl');
-        },
-
-        /* INPUT FUNCTIONS */
-
-        input_fill = function (n) {
-            return n < 10 ? '0' + n : n;
-        },
-        input_ordinal_suffix = function (n) {
-            var
-                s = ['th', 'st', 'nd', 'rd'],
-                v = n % 100;
-            return n + (s[(v - 20) % 10] || s[v] || s[0]);
-        },
-        input_change_value = function () {
-
-            if (!is_locked() && picker_ctrl) {
-
-                var
-                    d = get_current('d'),
-                    m = get_current('m'),
-                    y = get_current('y'),
-                    get_day = new Date(m + '/' + d + '/' + y).getDay(),
-
-                    str =
-                        pickers[picker.id].format
-                            .replace(/\b(d)\b/g, input_fill(d))
-                            .replace(/\b(m)\b/g, input_fill(m))
-                            .replace(/\b(S)\b/g, input_ordinal_suffix(d)) //new
-                            .replace(/\b(Y)\b/g, y)
-                            .replace(/\b(U)\b/g, get_unix(get_current_full())) //new
-                            .replace(/\b(D)\b/g, i18n[pickers[picker.id].lang].weekdays.short[get_day])
-                            .replace(/\b(l)\b/g, i18n[pickers[picker.id].lang].weekdays.full[get_day])
-                            .replace(/\b(F)\b/g, i18n[pickers[picker.id].lang].months.full[m - 1])
-                            .replace(/\b(M)\b/g, i18n[pickers[picker.id].lang].months.short[m - 1])
-                            .replace(/\b(n)\b/g, m)
-                            .replace(/\b(j)\b/g, d);
-
-                picker
-                    .input
-                    .val(str)
-                    .change();
-
-                picker_ctrl = false;
-
-            }
-
+        h = function(e) {
+            return !!/(^\d{1,4}[\.|\\/|-]\d{1,2}[\.|\\/|-]\d{1,4})(\s*(?:0?[1-9]:[0-5]|1(?=[012])\d:[0-5])\d\s*[ap]m)?$/.test(e) && e
         };
-
-    // GET UI EVENT
-
-    if (is_touch()) {
-        var
-            ui_event = {
-                i: 'touchstart',
-                m: 'touchmove',
-                e: 'touchend'
-            };
-    } else {
-        var
-            ui_event = {
-                i: 'mousedown',
-                m: 'mousemove',
-                e: 'mouseup'
-            };
-    }
-
-    var
-        picker_node_el = 'div.datedropper.picker-focus';
-
-    $(document)
-
-
-        //CLOSE PICKER
-        .on('click', function (e) {
-            if (picker) {
-                if (!picker.input.is(e.target) && !picker.element.is(e.target) && picker.element.has(e.target).length === 0) {
-                    picker_hide();
-                    pick_dragged = null;
-                }
-            }
-        })
-
-        //LOCK ANIMATION
-        .on(csse.a, picker_node_el + '.picker-rmbl', function () {
-            if (picker.element.hasClass('picker-rmbl')) {
-                $(this).removeClass('picker-rmbl');
-            }
-        })
-
-        //HIDE MODAL OVERLAY
-        .on(csse.t, '.picker-modal-overlay', function () {
-            $(this).remove();
-        })
-
-
-        //LARGE-MODE DAY CLICK
-        .on(ui_event.i, picker_node_el + ' .pick-lg li.pick-v', function () {
-            get_picker_els('.pick-lg-b li').removeClass('pick-sl');
-            $(this).addClass('pick-sl');
-            pickers[picker.id].key['d'].current = $(this).attr('data-value');
-            picker_ul_transition('d', $(this).attr('data-value'));
-            picker_ctrl = true;
-        })
-
-        //BUTTON LARGE-MODE
-        .on('click', picker_node_el + ' .pick-btn-sz', function () {
-            picker_large_onoff();
-        })
-
-        //BUTTON TRANSLATE-MODE
-        .on('click', picker_node_el + ' .pick-btn-lng', function () {
-            picker_translate_onoff();
-        })
-
-        //JUMP
-        .on(ui_event.i, picker_node_el + ' .pick-arw.pick-arw-s2', function (e) {
-
-            e.preventDefault();
-            pick_dragged = null;
-
-            var
-                i,
-                k = $(this).closest('ul').data('k'),
-                jump = pickers[picker.id].jump;
-
-            if ($(this).hasClass('pick-arw-r')) {
-                i = get_current('y') + jump;
-            } else {
-                i = get_current('y') - jump;
-            }
-
-            var
-                jumped_array = get_jumped('y', jump);
-
-            if (i > jumped_array[jumped_array.length - 1]) {
-                i = jumped_array[0];
-            }
-            if (i < jumped_array[0]) {
-                i = jumped_array[jumped_array.length - 1];
-            }
-
-            pickers[picker.id].key['y'].current = i;
-            picker_ul_transition('y', get_current('y'));
-
-            picker_ctrl = true;
-
-        })
-
-        //DEFAULT ARROW
-        .on(ui_event.i, picker_node_el + ' .pick-arw.pick-arw-s1', function (e) {
-            e.preventDefault();
-            pick_dragged = null;
-            var
-                k = $(this).closest('ul').data('k');
-            if ($(this).hasClass('pick-arw-r')) {
-                picker_ul_turn(k, 'right');
-            } else {
-                picker_ul_turn(k, 'left');
-            }
-
-            picker_ctrl = true;
-
-        })
-
-        // JUMP
-        .on(ui_event.i, picker_node_el + ' ul.pick.pick-y li', function () {
-            is_click = true;
-        })
-        .on(ui_event.e, picker_node_el + ' ul.pick.pick-y li', function () {
-            if (is_click && is_jumpable()) {
-                $(this).closest('ul').toggleClass('pick-jump');
-                var
-                    jumped = get_closest_jumped(get_current('y'), get_jumped('y', pickers[picker.id].jump));
-                pickers[picker.id].key['y'].current = jumped;
-                picker_ul_transition('y', get_current('y'));
-                is_click = false;
-            }
-        })
-
-        //TOGGLE CALENDAR
-        .on(ui_event.i, picker_node_el + ' ul.pick.pick-d li', function () {
-            is_click = true;
-        })
-        .on(ui_event.e, picker_node_el + ' ul.pick.pick-d li', function () {
-            if (is_click) {
-                picker_large_onoff();
-                is_click = false;
-            }
-        })
-
-        //TOGGLE TRANSLATE MODE
-        .on(ui_event.i, picker_node_el + ' ul.pick.pick-l li', function () {
-            is_click = true;
-        })
-        .on(ui_event.e, picker_node_el + ' ul.pick.pick-l li', function () {
-            if (is_click) {
-                picker_translate_onoff();
-                picker_translate($(this).val());
-                is_click = false;
-            }
-        })
-
-        //MOUSEDOWN ON UL
-        .on(ui_event.i, picker_node_el + ' ul.pick', function (e) {
-            pick_dragged = $(this);
-            if (pick_dragged) {
-                var
-                    k = pick_dragged.data('k');
-                pick_drag_offset = is_touch() ? e.originalEvent.touches[0].pageY : e.pageY;
-                pick_drag_temp = get_current(k);
-            }
-        })
-
-        //MOUSEMOVE ON UL
-        .on(ui_event.m, function (e) {
-
-            is_click = false;
-
-            if (pick_dragged) {
-                e.preventDefault();
-                var
-                    k = pick_dragged.data('k');
-                o = is_touch() ? e.originalEvent.touches[0].pageY : e.pageY;
-                o = pick_drag_offset - o;
-                o = Math.round(o * .026);
-                i = pick_drag_temp + o;
-                var
-                    int = get_clear(k, i);
-                if (int != pickers[picker.id].key[k].current) {
-                    picker_values_increase(k, int);
-                }
-
-                picker_ctrl = true;
-            }
-        })
-
-        //MOUSEUP ON UL
-        .on(ui_event.e, function (e) {
-            if (pick_dragged) {
-                pick_dragged = null,
-                    pick_drag_offset = null,
-                    pick_drag_temp = null;
-            }
-            if (picker) {
-                picker_set();
-            }
-        })
-
-        //CLICK SUBMIT
-        .on(ui_event.i, picker_node_el + ' .pick-submit', function () {
-            picker_hide();
-        });
-
-    $(window).resize(function () {
-        if (picker) {
-            picker_offset();
-            is_fx_mobile();
-        }
-    });
-
-    $.fn.dateDropper = function (options) {
-        return $(this).each(function () {
-                if ($(this).is('input') && !$(this).hasClass('picker-input')) {
-
-                    var
-                        input = $(this),
-                        id = 'datedropper-' + Object.keys(pickers).length;
-
-                    input
-                        .attr('data-id', id)
-                        .addClass('picker-input')
-                        .prop({
-                            'type': 'text',
-                            'readonly': true
-                        });
-
-                    var
-                        picker_default_date = (input.data('default-date') && is_date(input.data('default-date'))) ? input.data('default-date') : null,
-                        picker_disabled_days = (input.data('disabled-days')) ? input.data('disabled-days').split(',') : null,
-                        picker_format = input.data('format') || 'm/d/Y',
-                        picker_fx = (input.data('fx') === false) ? input.data('fx') : true,
-                        picker_fx_class = (input.data('fx') === false) ? '' : 'picker-fxs',
-                        picker_fx_mobile = (input.data('fx-mobile') === false) ? input.data('fx-mobile') : true,
-                        picker_init_set = (input.data('init-set') === false) ? false : true,
-                        picker_lang = (input.data('lang') && (input.data('lang') in i18n)) ? input.data('lang') : 'en',
-                        picker_large = (input.data('large-mode') === true) ? true : false,
-                        picker_large_class = (input.data('large-default') === true && picker_large === true) ? 'picker-lg' : '',
-                        picker_lock = (input.data('lock') == 'from' || input.data('lock') == 'to') ? input.data('lock') : false,
-                        picker_jump = (input.data('jump') && is_int(input.data('jump'))) ? input.data('jump') : 10,
-                        picker_max_year = (input.data('max-year') && is_int(input.data('max-year'))) ? input.data('max-year') : new Date().getFullYear(),
-                        picker_min_year = (input.data('min-year') && is_int(input.data('min-year'))) ? input.data('min-year') : 1970,
-
-                        picker_modal = (input.data('modal') === true) ? 'picker-modal' : '',
-                        picker_theme = input.data('theme') || 'primary',
-                        picker_translate_mode = (input.data('translate-mode') === true) ? true : false;
-
-                    if (picker_disabled_days) {
-                        $.each(picker_disabled_days, function (index, value) {
-                            if (value && is_date(value)) {
-                                picker_disabled_days[index] = get_unix(value);
-                            }
-                        });
-                    }
-
-                    pickers[id] = {
-                        disabledays: picker_disabled_days,
-                        format: picker_format,
-                        fx: picker_fx,
-                        fxmobile: picker_fx_mobile,
-                        lang: picker_lang,
-                        large: picker_large,
-                        lock: picker_lock,
-                        jump: picker_jump,
-                        key: {
-                            m: {
-                                min: 1,
-                                max: 12,
-                                current: 1,
-                                today: (new Date().getMonth() + 1)
-                            },
-                            d: {
-                                min: 1,
-                                max: 31,
-                                current: 1,
-                                today: new Date().getDate()
-                            },
-                            y: {
-                                min: picker_min_year,
-                                max: picker_max_year,
-                                current: picker_min_year,
-                                today: new Date().getFullYear()
-                            },
-                            l: {
-                                min: 0,
-                                max: Object.keys(i18n).length - 1,
-                                current: 0,
-                                today: 0
-                            }
-                        },
-                        translate: picker_translate_mode
-                    };
-
-                    if (picker_default_date) {
-
-                        var regex = /\d+/g;
-                        var string = picker_default_date;
-                        var matches = string.match(regex);
-
-                        $.each(matches, function (index, value) {
-                            matches[index] = parseInt(value);
-                        });
-
-                        pickers[id].key.m.today = (matches[0] && matches[0] <= 12) ? matches[0] : pickers[id].key.m.today;
-                        pickers[id].key.d.today = (matches[1] && matches[1] <= 31) ? matches[1] : pickers[id].key.d.today;
-                        pickers[id].key.y.today = (matches[2]) ? matches[2] : pickers[id].key.y.today;
-
-                        if (pickers[id].key.y.today > pickers[id].key.y.max) {
-                            pickers[id].key.y.max = pickers[id].key.y.today;
-                        }
-                        if (pickers[id].key.y.today < pickers[id].key.y.min) {
-                            pickers[id].key.y.min = pickers[id].key.y.today;
-                        }
-
-                    }
-
-                    $('<div>', {
-                        class: 'datedropper ' + picker_modal + ' ' + picker_theme + ' ' + picker_fx_class + ' ' + picker_large_class,
-                        id: id,
-                        html: $('<div>', {
-                            class: 'picker'
-                        })
-                    })
-                        .appendTo('body');
-
-                    picker = {
-                        id: id,
-                        input: input,
-                        element: $('#' + id)
-                    };
-
-                    for (var k in pickers[id].key) {
-                        $('<ul>', {
-                            class: 'pick pick-' + k,
-                            'data-k': k
-                        })
-                            .appendTo(get_picker_els('.picker'));
-                        picker_render_ul(k);
-                    }
-
-                    if (pickers[id].large) {
-
-                        //calendar
-                        $('<div>', {
-                            class: 'pick-lg'
-                        })
-                            .insertBefore(get_picker_els('.pick-d'));
-
-                        $('<ul class="pick-lg-h"></ul><ul class="pick-lg-b"></ul>')
-                            .appendTo(get_picker_els('.pick-lg'));
-
-                        var
-                            picker_day_offset = get_days_array();
-
-                        for (var i = 0; i < 7; i++) {
-                            $('<li>', {
-                                html: i18n[pickers[picker.id].lang].weekdays.short[picker_day_offset[i]]
-                            })
-                                .appendTo(get_picker_els('.pick-lg .pick-lg-h'));
-                        }
-                        for (var i = 0; i < 42; i++) {
-                            $('<li>')
-                                .appendTo(get_picker_els('.pick-lg .pick-lg-b'));
-                        }
-                    }
-
-                    //buttons
-                    $('<div>', {
-                        class: 'pick-btns'
-                    })
-                        .appendTo(get_picker_els('.picker'));
-
-                    $('<div>', {
-                        class: 'pick-submit'
-                    })
-                        .appendTo(get_picker_els('.pick-btns'));
-
-                    if (pickers[picker.id].translate) {
-                        $('<div>', {
-                            class: 'pick-btn pick-btn-lng'
-                        })
-                            .appendTo(get_picker_els('.pick-btns'));
-                    }
-                    if (pickers[picker.id].large) {
-                        $('<div>', {
-                            class: 'pick-btn pick-btn-sz'
-                        })
-                            .appendTo(get_picker_els('.pick-btns'));
-                    }
-
-                    if (picker_format == 'Y' || picker_format == 'm') {
-                        get_picker_els('.pick-d,.pick-btn-sz').hide();
-                        picker.element.addClass('picker-tiny');
-                        if (picker_format == 'Y') {
-                            get_picker_els('.pick-m,.pick-btn-lng').hide();
-                        }
-                        if (picker_format == 'm') {
-                            get_picker_els('.pick-y').hide();
-                        }
-                    }
-
-                    if (picker_init_set) {
-                        picker_ctrl = true;
-                        input_change_value();
-                    }
-
-                    picker = null;
-
-                }
-
-            })
-            .focus(function (e) {
-
-                e.preventDefault();
-                $(this).blur();
-
-                if (picker) {
-                    picker_hide();
-                }
-
-                picker = {
-                    id: $(this).data('id'),
-                    input: $(this),
-                    element: $('#' + $(this).data('id'))
-                };
-
-                is_fx_mobile();
-                picker_offset();
-                picker_set();
-                picker_show();
-
-                if (picker.element.hasClass('picker-modal')) {
-                    $('body').append('<div class="picker-modal-overlay"></div>');
-                }
-
-            });
+    if (f()) var v = {
+        i: "touchstart",
+        m: "touchmove",
+        e: "touchend"
     };
-}(jQuery));
+    else v = {
+        i: "mousedown",
+        m: "mousemove",
+        e: "mouseup"
+    };
+    var y = function(e) {
+            var o = {},
+                n = /^data-dd\-(.+)$/;
+            return $.each(e.get(0).attributes, function(e, i) {
+                if (n.test(i.nodeName)) {
+                    var t = (a = i.nodeName.match(n)[1], a.replace(/(?:^\w|[A-Z]|\b\w)/g, function(e, i) {
+                            return 0 == i ? e.toLowerCase() : e.toUpperCase()
+                        }).replace(/\s+/g, "")).replace(new RegExp("-", "g"), ""),
+                        r = !1;
+                    switch (i.nodeValue) {
+                        case "true":
+                            r = !0;
+                            break;
+                        case "false":
+                            r = !1;
+                            break;
+                        default:
+                            r = i.nodeValue
+                    }
+                    o[t] = r
+                }
+                var a
+            }), o
+        },
+        w = function(r, e) {
+            var i, a = N(r),
+                o = !1,
+                n = !1,
+                p = !1,
+                s = !0;
+            if (a && $.each(a, function(e, i) {
+                var t = P(i.value);
+                t.m == x(r, "m") && t.y == x(r, "y") && A(r, ".pick-lg-b li.pick-v[data-value=" + t.d + "]").addClass("pick-sl pick-sl-" + e)
+            }), o = A(r, ".pick-lg-b li.pick-sl-a"), n = e || A(r, ".pick-lg-b li.pick-sl-b"), i = {
+                a: o.length ? A(r, ".pick-lg-b li").index(o) + 1 : 0,
+                b: n.length ? A(r, ".pick-lg-b li").index(n) - 1 : A(r, ".pick-lg-b li").last().index()
+            }, a.a.value != a.b.value && e && (s = !1), e ? (t = L(x(r, "m") + "/" + e.attr("data-value") + "/" + x(r, "y")), a.a.value == a.b.value && t > a.a.value && (p = !0)) : (t = L(x(r)), (t >= a.a.value && t <= a.b.value || o.length) && (p = !0)), s && A(r, ".pick-lg-b li").removeClass("pick-dir pick-dir-sl pick-dir-first pick-dir-last"), p)
+                for (var d = i.a; d <= i.b; d++) A(r, ".pick-lg-b li").eq(d).addClass("pick-dir");
+            o.next(".pick-dir").addClass("pick-dir-first"), n.prev(".pick-dir").addClass("pick-dir-last")
+        },
+        x = function(e, i) {
+            return i ? parseInt(e.key[i].current) : x(e, "m") + "/" + x(e, "d") + "/" + x(e, "y")
+        },
+        D = function(e, i) {
+            return i ? parseInt(e.key[i].today) : D(e, "m") + "/" + D(e, "d") + "/" + D(e, "y")
+        },
+        z = function(e, i, t) {
+            var r = e.key[i];
+            return t > r.max ? z(e, i, t - r.max + (r.min - 1)) : t < r.min ? z(e, i, t + 1 + (r.max - r.min)) : t
+        },
+        T = function(e) {
+            return !!e && {
+                selector: e.selector,
+                date: J(e)
+            }
+        },
+        C = function(e, i) {
+            return A(e, 'ul.pick[data-k="' + i + '"]')
+        },
+        M = function(e, i, t) {
+            ul = C(e, i);
+            var r = [];
+            return ul.find("li").each(function() {
+                r.push($(this).attr("value"))
+            }), "last" == t ? r[r.length - 1] : r[0]
+        },
+        j = function(e, i) {
+            var t = !1;
+            for (var r in "Y" != e.format && "m" != e.format || (e.hideDay = !0, "Y" == e.format && (e.hideMonth = !0), "m" == e.format && (e.hideYear = !0), t = !0), (e.hideDay || e.hideMonth || e.hideYear) && (t = !0), e.largeOnly && (e.large = !0, e.largeDefault = !0), (e.hideMonth || e.hideDay || e.hideYear || e.showOnlyEnabledDays) && (e.largeOnly = !1, e.large = !1, e.largeDefault = !1), e.element = $("<div>", {
+                class: "datedropper " + (t ? "picker-clean" : "") + " " + (e.modal ? "picker-modal" : "") + " " + e.theme + " " + (e.fx ? "picker-fxs" : "") + " " + (e.large && e.largeDefault ? "picker-lg" : ""),
+                id: e.identifier,
+                html: $("<div>", {
+                    class: "picker"
+                })
+            }).appendTo("body"), e.key) {
+                var a = !0;
+                "y" == r && e.hideYear && (a = !1), "d" == r && e.hideDay && (a = !1), "m" == r && e.hideMonth && (a = !1), a && ($("<ul>", {
+                    class: "pick pick-" + r,
+                    "data-k": r,
+                    tabindex: 0
+                }).appendTo(A(e, ".picker")), K(e, r))
+            }
+            e.large && $("<div>", {
+                class: "pick-lg"
+            }).insertBefore(A(e, ".pick-d")), $("<div>", {
+                class: "pick-btns"
+            }).appendTo(A(e, ".picker")), $("<div>", {
+                tabindex: 0,
+                class: "pick-submit",
+                html: $($.dateDropperSetup.icons.checkmark)
+            }).appendTo(A(e, ".pick-btns")), e.large && !e.largeOnly && $("<div>", {
+                class: "pick-btn pick-btn-sz",
+                html: $($.dateDropperSetup.icons.expand)
+            }).appendTo(A(e, ".pick-btns")), setTimeout(function() {
+                e.element.addClass("picker-focused"), f() || setTimeout(function() {
+                    A(e, ".pick:first-of-type").focus()
+                }, 100), e.element.hasClass("picker-modal") && (e.overlay = $('<div class="picker-overlay"></div>').appendTo("body")), b(e), I(e), W(e), o = e, i && i()
+            }, 100)
+        },
+        S = function(e) {
+            var i = e.attr("data-datedropper-id");
+            return p[i] || !1
+        },
+        A = function(e, i) {
+            if (e.element) return e.element.find(i)
+        },
+        Y = function(e) {
+            if ("string" == typeof e) {
+                if (h(e)) {
+                    var t = e.match(/\d+/g);
+                    return $.each(t, function(e, i) {
+                        t[e] = parseInt(i)
+                    }), {
+                        m: t[0] && t[0] <= 12 ? t[0] : picker.key.m.today,
+                        d: t[1] && t[1] <= 31 ? t[1] : picker.key.d.today,
+                        y: t[2] || picker.key.y.today
+                    }
+                }
+                return !1
+            }
+            return !1
+        },
+        F = "div.datedropper.picker-focused",
+        J = function(e, i) {
+            i || (i = {
+                d: x(e, "d"),
+                m: x(e, "m"),
+                y: x(e, "y")
+            });
+            var t = i.d,
+                r = i.m,
+                a = i.y,
+                o = new Date(r + "/" + t + "/" + a).getDay(),
+                n = {
+                    F: $.dateDropperSetup.languages[e.lang].months.full[r - 1],
+                    M: $.dateDropperSetup.languages[e.lang].months.short[r - 1],
+                    D: $.dateDropperSetup.languages[e.lang].weekdays.full[o].substr(0, 3),
+                    l: $.dateDropperSetup.languages[e.lang].weekdays.full[o],
+                    d: O(t),
+                    m: O(r),
+                    S: E(t),
+                    Y: a,
+                    U: L(x(e)),
+                    n: r,
+                    j: t
+                },
+                p = e.format.replace(/\b(F)\b/g, n.F).replace(/\b(M)\b/g, n.M).replace(/\b(D)\b/g, n.D).replace(/\b(l)\b/g, n.l).replace(/\b(d)\b/g, n.d).replace(/\b(m)\b/g, n.m).replace(/\b(S)\b/g, n.S).replace(/\b(Y)\b/g, n.Y).replace(/\b(U)\b/g, n.U).replace(/\b(n)\b/g, n.n).replace(/\b(j)\b/g, n.j);
+            return n.formatted = p, n
+        },
+        O = function(e) {
+            return e < 10 ? "0" + e : e
+        },
+        E = function(e) {
+            var i = ["th", "st", "nd", "rd"],
+                t = e % 100;
+            return e + (i[(t - 20) % 10] || i[t] || i[0])
+        },
+        L = function(e) {
+            return Date.parse(e) / 1e3
+        },
+        P = function(e) {
+            var i = new Date(1e3 * e);
+            return {
+                m: i.getMonth() + 1,
+                y: i.getFullYear(),
+                d: i.getDate()
+            }
+        },
+        N = function(e) {
+            var r = '[data-dd-roundtrip="' + e.roundtrip + '"]',
+                a = !1;
+            if ($(r).length) {
+                a = {};
+                $.each(["a", "b"], function(e, i) {
+                    var t = $(r + "[data-dd-roundtrip-" + i + "]");
+                    a[i] = {
+                        value: t.length && t.attr("data-dd-roundtrip-" + i) || !1,
+                        selector: !!t.length && t
+                    }
+                })
+            }
+            return a
+        },
+        X = function(e) {
+            e.large && (e.element.addClass("picker-transit").toggleClass("picker-lg"), e.element.hasClass("picker-lg") && q(e), setTimeout(function() {
+                e.element.removeClass("picker-transit")
+            }, 800))
+        },
+        I = function(e) {
+            if (!e.element.hasClass("picker-modal")) {
+                var i = e.selector,
+                    t = i.offset().left + i.outerWidth() / 2,
+                    r = i.offset().top + i.outerHeight();
+                e.element.css({
+                    left: t,
+                    top: r
+                })
+            }
+        },
+        R = function(a) {
+            if (a.jump = g(a.jump) || 10, a.maxYear = g(a.maxYear), a.minYear = g(a.minYear), a.lang in $.dateDropperSetup.languages || (a.lang = "en"), a.key = {
+                m: {
+                    min: 1,
+                    max: 12,
+                    current: (new Date).getMonth() + 1,
+                    today: (new Date).getMonth() + 1
+                },
+                d: {
+                    min: 1,
+                    max: 31,
+                    current: (new Date).getDate(),
+                    today: (new Date).getDate()
+                },
+                y: {
+                    min: a.minYear || (new Date).getFullYear() - 50,
+                    max: a.maxYear || (new Date).getFullYear() + 50,
+                    current: (new Date).getFullYear(),
+                    today: (new Date).getFullYear()
+                }
+            }, a.key.y.current > a.key.y.max && (a.key.y.current = a.key.y.max), a.key.y.current < a.key.y.min && (a.key.y.current = a.key.y.min), a.minDate) {
+                var e = !!a.defaultDate && L(a.defaultDate),
+                    i = !!a.minDate && L(a.minDate);
+                e ? e < i && (a.defaultDate = a.minDate) : a.defaultDate = a.minDate, Q(a, P(L(a.defaultDate)))
+            }
+            if (a.disabledDays = a.disabledDays ? a.disabledDays.split(",") : null, a.enabledDays = a.enabledDays ? a.enabledDays.split(",") : null, a.disabledDays && $.each(a.disabledDays, function(e, i) {
+                i && h(i) && (a.disabledDays[e] = L(i))
+            }), a.enabledDays && $.each(a.enabledDays, function(e, i) {
+                i && h(i) && (a.enabledDays[e] = L(i))
+            }), a.showOnlyEnabledDays && a.enabledDays) {
+                var t = (e = !!a.defaultDate && L(a.defaultDate)) && a.enabledDays.includes(e) ? P(e) : P(a.enabledDays[0]);
+                $.each(t, function(e, i) {
+                    a.key[e].current = i
+                })
+            } else a.showOnlyEnabledDays = !1;
+            if (a.roundtrip) {
+                var o = L(x(a)),
+                    r = $('[data-dd-roundtrip="' + a.roundtrip + '"]');
+                1 < r.length ? r.each(function() {
+                    var e = 0 == r.index($(this)) ? "a" : "b",
+                        i = $(this).attr("data-dd-roundtrip-default-" + e),
+                        t = i ? L(i) : o;
+                    t && $(this).attr("data-dd-roundtrip-" + e, t)
+                }) : $.each(["a", "b"], function(e, i) {
+                    var t = a.selector.attr("data-dd-roundtrip-default-" + i),
+                        r = t ? L(t) : o;
+                    r && a.selector.attr("data-dd-roundtrip-" + i, r)
+                });
+                var n = N(a),
+                    p = P(n.a.value);
+                console.log(a.defaultDate), a.defaultDate = p.m + "/" + p.d + "/" + p.y, a.largeOnly = !0
+            }
+            if (a.selector.on(a.eventListener, function(e) {
+                e.preventDefault(), $(this).blur(), H($(this))
+            }), a.trigger && $(a.trigger).on("click", function(e) {
+                a.selector.trigger(a.eventListener)
+            }), a.onReady && a.onReady(T(a)), a.defaultDate) {
+                var s = Y(a.defaultDate);
+                s && ($.each(s, function(e, i) {
+                    a.key[e] && (a.key[e].current = i)
+                }), a.key.y.current > a.key.y.max && (a.key.y.max = a.key.y.current), a.key.y.current < a.key.y.min && (a.key.y.min = a.key.y.current))
+            }
+        },
+        V = function(e, i) {
+            e.element && (e.element.remove(), e.overlay && e.overlay.remove(), j(e))
+        },
+        H = function(e, i) {
+            o && B(o);
+            var t = S(e);
+            t && j(t)
+        },
+        B = function(e) {
+            var i = {
+                element: e.element,
+                overlay: e.overlay
+            };
+            i.element && (i.element.removeClass("picker-focused"), setTimeout(function() {
+                i.element.remove(), i.overlay && i.overlay.addClass("picker-overlay-hidden")
+            }, 400)), o = null
+        },
+        G = function(e) {
+            if (e) {
+                var i, t, r = !1;
+                return i = L(x(e)), t = L(D(e)), e.lock && ("from" == e.lock && (r = i < t), "to" == e.lock && (r = t < i)), (e.minDate || e.maxDate) && (i = L(x(e)), t = e.minDate ? L(e.minDate) : null, c = e.maxDate ? L(e.maxDate) : null, t && c ? r = i < t || i > c : t ? r = i < t : c && (r = i > c)), e.disabledDays && !e.enabledDays && (r = -1 != e.disabledDays.indexOf(i)), e.enabledDays && !e.disabledDays && (r = -1 == e.enabledDays.indexOf(i)), r ? (Z(e), e.element.addClass("picker-locked"), !0) : (e.element.removeClass("picker-locked"), !1)
+            }
+        },
+        K = function(e, t) {
+            var r = C(e, t),
+                a = e.key[t];
+            for (r.empty(), i = a.min; i <= a.max; i++) {
+                var o = i;
+                "m" == t && (o = $.dateDropperSetup.languages[e.lang].months.short[i - 1]), o += "d" == t ? "<span></span>" : "", $("<li>", {
+                    value: i,
+                    html: "<div>" + o + "</div>"
+                }).appendTo(r)
+            }
+            $.each(["l", "r"], function(e, i) {
+                $("<div>", {
+                    class: "pick-arw pick-arw-s1 pick-arw-" + i,
+                    html: $("<div>", {
+                        class: "pick-i-" + i,
+                        html: $($.dateDropperSetup.icons.arrow[i])
+                    })
+                }).appendTo(r)
+            }), "y" == t && $.each(["l", "r"], function(e, i) {
+                $("<div>", {
+                    class: "pick-arw pick-arw-s2 pick-arw-" + i,
+                    html: $("<div>", {
+                        class: "pick-i-" + i,
+                        html: $($.dateDropperSetup.icons.arrow[i])
+                    })
+                }).appendTo(r)
+            }), U(e, t, x(e, t))
+        },
+        q = function(r) {
+            A(r, ".pick-lg").empty().append('<ul class="pick-lg-h"></ul><ul class="pick-lg-b"></ul>');
+            for (var e = r.startFromMonday ? [1, 2, 3, 4, 5, 6, 0] : [0, 1, 2, 3, 4, 5, 6], i = 0; i < 7; i++) $("<li>", {
+                html: "<div>" + $.dateDropperSetup.languages[r.lang].weekdays.short[e[i]] + "</div>"
+            }).appendTo(A(r, ".pick-lg .pick-lg-h"));
+            for (i = 0; i < 42; i++) $("<li>", {
+                html: $("<div>")
+            }).appendTo(A(r, ".pick-lg .pick-lg-b"));
+            var t = 0,
+                a = A(r, ".pick-lg-b"),
+                o = (new Date(x(r)), new Date(x(r))),
+                n = new Date(x(r)),
+                p = function(e) {
+                    var i = e.getMonth(),
+                        t = e.getFullYear();
+                    return [31, t % 4 == 0 && (t % 100 != 0 || t % 400 == 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][i]
+                };
+            n.setMonth(n.getMonth() - 1), o.setDate(1);
+            var s = o.getDay() - 1;
+            s < 0 && (s = 6), r.startFromMonday && --s < 0 && (s = 6);
+            for (i = p(n) - s; i <= p(n); i++) a.find("li").eq(t).addClass("pick-b pick-n pick-h").attr("data-value", i), t++;
+            for (i = 1; i <= p(o); i++) a.find("li").eq(t).addClass("pick-n pick-v").attr("data-value", i), t++;
+            if (a.find("li.pick-n").length < 42) {
+                var d = 42 - a.find("li.pick-n").length;
+                for (i = 1; i <= d; i++) a.find("li").eq(t).addClass("pick-a pick-n pick-h").attr("data-value", i), t++
+            }
+            if (r.lock && ("from" === r.lock ? x(r, "y") <= D(r, "y") && (x(r, "m") == D(r, "m") ? A(r, '.pick-lg .pick-lg-b li.pick-v[data-value="' + D(r, "d") + '"]').prevAll("li").addClass("pick-lk") : x(r, "m") < D(r, "m") ? A(r, ".pick-lg .pick-lg-b li").addClass("pick-lk") : x(r, "m") > D(r, "m") && x(r, "y") < D(r, "y") && A(r, ".pick-lg .pick-lg-b li").addClass("pick-lk")) : x(r, "y") >= D(r, "y") && (x(r, "m") == D(r, "m") ? A(r, '.pick-lg .pick-lg-b li.pick-v[data-value="' + D(r, "d") + '"]').nextAll("li").addClass("pick-lk") : x(r, "m") > D(r, "m") ? A(r, ".pick-lg .pick-lg-b li").addClass("pick-lk") : x(r, "m") < D(r, "m") && x(r, "y") > D(r, "y") && A(r, ".pick-lg .pick-lg-b li").addClass("pick-lk"))), r.maxDate) {
+                var l = Y(r.maxDate);
+                if (l)
+                    if (x(r, "y") == l.y && x(r, "m") == l.m) A(r, '.pick-lg .pick-lg-b li.pick-v[data-value="' + l.d + '"]').nextAll("li").addClass("pick-lk");
+                    else L(r.maxDate) < L(x(r)) && A(r, ".pick-lg .pick-lg-b li.pick-v").addClass("pick-lk")
+            }
+            if (r.minDate) {
+                var c = Y(r.minDate);
+                if (c)
+                    if (x(r, "y") == c.y && x(r, "m") == c.m) A(r, '.pick-lg .pick-lg-b li.pick-v[data-value="' + c.d + '"]').prevAll("li").addClass("pick-lk");
+                    else {
+                        var k = L(r.minDate);
+                        L(x(r)) < k && A(r, ".pick-lg .pick-lg-b li.pick-v").addClass("pick-lk")
+                    }
+            }
+            r.disabledDays && !r.enabledDays && $.each(r.disabledDays, function(e, i) {
+                if (i) {
+                    var t = P(i);
+                    t.m == x(r, "m") && t.y == x(r, "y") && A(r, '.pick-lg .pick-lg-b li.pick-v[data-value="' + t.d + '"]').addClass("pick-lk")
+                }
+            }), r.enabledDays && !r.disabledDays && (A(r, ".pick-lg .pick-lg-b li").addClass("pick-lk"), $.each(r.enabledDays, function(e, i) {
+                if (i) {
+                    var t = P(i);
+                    t.m == x(r, "m") && t.y == x(r, "y") && A(r, '.pick-lg .pick-lg-b li.pick-v[data-value="' + t.d + '"]').removeClass("pick-lk")
+                }
+            })), r.roundtrip ? w(r) : A(r, ".pick-lg-b li.pick-v[data-value=" + x(r, "d") + "]").addClass("pick-sl")
+        },
+        Q = function(t, e) {
+            $.each(e, function(e, i) {
+                t.key[e].current = i
+            })
+        },
+        W = function(e, i) {
+            var t, r, a, o;
+            e.element.hasClass("picker-lg") && q(e), r = x(t = e, "m"), a = x(t, "y"), o = a % 4 == 0 && (a % 100 != 0 || a % 400 == 0), t.key.d.max = [31, o ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][r - 1], x(t, "d") > t.key.d.max && (t.key.d.current = t.key.d.max, U(t, "d", x(t, "d"))), A(t, ".pick-d li").removeClass("pick-wke").each(function() {
+                var e = new Date(r + "/" + $(this).attr("value") + "/" + a).getDay();
+                $(this).find("span").html($.dateDropperSetup.languages[t.lang].weekdays.full[e]), 0 != e && 6 != e || $(this).addClass("pick-wke")
+            }), t.element.hasClass("picker-lg") && (A(t, ".pick-lg-b li").removeClass("pick-wke"), A(t, ".pick-lg-b li.pick-v").each(function() {
+                var e = new Date(r + "/" + $(this).attr("data-value") + "/" + a).getDay();
+                0 != e && 6 != e || $(this).addClass("pick-wke")
+            })), G(e) || (! function(e) {
+                clearInterval(s);
+                var i = e.minYear || e.key.y.current - 50,
+                    t = e.maxYear || e.key.y.current + 50;
+                e.key.y.max = t, e.key.y.min = i, s = setTimeout(function() {
+                    K(e, "y")
+                }, 400)
+            }(e), ee(e), i && i(e))
+        },
+        U = function(e, i, t) {
+            var r, a = C(e, i);
+            (a.find("li").removeClass("pick-sl pick-bfr pick-afr"), t == M(e, i, "last")) && ((r = a.find('li[value="' + M(e, i, "first") + '"]')).clone().insertAfter(a.find("li[value=" + t + "]")), r.remove());
+            t == M(e, i, "first") && ((r = a.find('li[value="' + M(e, i, "last") + '"]')).clone().insertBefore(a.find("li[value=" + t + "]")), r.remove());
+            a.find("li[value=" + t + "]").addClass("pick-sl"), a.find("li.pick-sl").nextAll("li").addClass("pick-afr"), a.find("li.pick-sl").prevAll("li").addClass("pick-bfr")
+        },
+        _ = function(e, i, t) {
+            var r = e.key[i];
+            t > r.max && ("d" == i && e.autoIncrease && $(e, "m", "right"), "m" == i && e.autoIncrease && $(e, "y", "right"), t = r.min), t < r.min && ("d" == i && e.autoIncrease && $(e, "m", "left"), "m" == i && e.autoIncrease && $(e, "y", "left"), t = r.max), e.key[i].current = t, U(e, i, t)
+        },
+        $ = function(e, i, t) {
+            if (e.showOnlyEnabledDays && e.enabledDays) ! function(t, e) {
+                for (var i = L(x(t)), r = t.enabledDays, a = (r.length, null), o = 0; o < r.length; o++) r[o] === i && (a = o);
+                "right" == e ? a++ : a--;
+                var n = !!r[a] && P(r[a]);
+                n && $.each(n, function(e, i) {
+                    t.key[e].current = i, _(t, e, i)
+                })
+            }(e, t);
+            else {
+                var r = x(e, i);
+                "right" == t ? r++ : r--, _(e, i, r)
+            }
+        },
+        Z = function(e) {
+            e.element.find(".picker").addClass("picker-rumble")
+        },
+        ee = function(o, e) {
+            var i = !0;
+            if (o.roundtrip) {
+                i = !1;
+                var t = N(o);
+                if (t) {
+                    if (1 < $('.picker-trigger[data-dd-roundtrip="' + o.selector.data("dd-roundtrip") + '"]').length) $.each(t, function(e, i) {
+                        var t = i.selector.attr("data-datedropper-id"),
+                            r = P(i.value),
+                            a = J(o, r);
+                        o.identifier != t && p[t] && (p[t].key.m.current = r.m, p[t].key.d.current = r.d, p[t].key.y.current = r.y), i.selector.is("input") && i.selector.val(a.formatted).change()
+                    });
+                    else {
+                        var r = J(o, P(t.a.value)),
+                            a = J(o, P(t.b.value));
+                        o.selector.val(r.formatted + " - " + a.formatted)
+                    }
+                    t.a.value != t.b.value && o.onRoundTripChange && o.onRoundTripChange({
+                        outward: P(t.a.value),
+                        return: P(t.b.value)
+                    }), o.onChange && o.onChange(T(o))
+                }
+            } else i = !!e || o.autofill;
+            if (i) {
+                var n = J(o);
+                o.selector.is("input") && o.selector.val(n.formatted).change(), o.changeValueTo && ie(o, n.formatted), o.onChange && o.onChange(T(o))
+            }
+        },
+        ie = function(e, i) {
+            var t = $(e.changeValueTo);
+            t.length && t.is("input") && t.val(i).change()
+        };
+    $(document).on("keydown", function(e) {
+        var i = e.which;
+        if (o && !f())
+            if (32 == i) A(o, ":focus").click(), e.preventDefault();
+            else if (9 == i && e.shiftKey) $(e.target).is(".pick-m") && (e.preventDefault(), $(".datedropper .pick-submit").focus());
+            else if (9 == i) $(e.target).is(".pick-submit") && (e.preventDefault(), $(".datedropper .pick-m").focus());
+            else if (27 == i) B(o);
+            else if (13 == i) A(o, ".pick-submit").trigger(v.i);
+            else if (37 == i || 39 == i) {
+                var t = A(o, ".pick:focus");
+                if (t.length && (37 == i || 39 == i)) {
+                    if (37 == i) var r = "left";
+                    if (39 == i) r = "right";
+                    var a = t.attr("data-k");
+                    $(o, a, r), W(o)
+                }
+            }
+    }).on("focus", ".pick-d", function() {
+        if (o) {
+            var e = o.element.find(".pick-lg");
+            e.length && !e.hasClass("pick-lg-focused") && e.addClass("pick-lg-focused")
+        }
+    }).on("blur", ".pick-d", function() {
+        if (o) {
+            var e = o.element.find(".pick-lg");
+            e.length && e.hasClass("pick-lg-focused") && e.removeClass("pick-lg-focused")
+        }
+    }).on("click", function(e) {
+        o && (o.selector.is(e.target) || o.element.is(e.target) || 0 !== o.element.has(e.target).length || (B(o), a = null))
+    }).on(r, F + " .picker-rumble", function() {
+        $(this).removeClass("picker-rumble")
+    }).on(e, ".picker-overlay", function() {
+        $(this).remove()
+    }).on(v.i, F + " .pick-lg li.pick-v", function() {
+        if (o) {
+            if (A(o, ".pick-lg-b li").removeClass("pick-sl"), $(this).addClass("pick-sl"), o.key.d.current = $(this).attr("data-value"), U(o, "d", $(this).attr("data-value")), o.roundtrip) {
+                var i = N(o),
+                    t = L(x(o));
+                if (i) {
+                    var r = i.a.value == i.b.value ? "b" : "a";
+                    "b" == r && t <= i.a.value && (r = "a"), "a" == r ? $.each(i, function(e) {
+                        i[e].selector.attr("data-dd-roundtrip-" + e, t).attr("data-dd-roundtrip-selector", r)
+                    }) : i[r].selector.attr("data-dd-roundtrip-" + r, t).attr("data-dd-roundtrip-selector", r), r = "b" == r ? "a" : "b"
+                }
+            }
+            W(o)
+        }
+    }).on("mouseleave", F + " .pick-lg .pick-lg-b li", function() {
+        o && o.roundtrip && w(o)
+    }).on("mouseenter", F + " .pick-lg .pick-lg-b li", function() {
+        o && o.roundtrip && w(o, $(this))
+    }).on("click", F + " .pick-btn-sz", function() {
+        o && X(o)
+    }).on(v.i, F + " .pick-arw.pick-arw-s2", function(e) {
+        if (o) {
+            var i;
+            e.preventDefault(), a = null;
+            $(this).closest("ul").data("k");
+            var t = o.jump;
+            i = $(this).hasClass("pick-arw-r") ? x(o, "y") + t : x(o, "y") - t;
+            var r = function(e, i, t) {
+                for (var r = [], a = e.key[i], o = a.min; o <= a.max; o++) o % t == 0 && r.push(o);
+                return r
+            }(o, "y", t);
+            i > r[r.length - 1] && (i = r[0]), i < r[0] && (i = r[r.length - 1]), o.key.y.current = i, U(o, "y", x(o, "y"))
+        }
+    }).on(v.i, F, function(e) {
+        o && A(o, "*:focus").blur()
+    }).on(v.i, F + " .pick-arw.pick-arw-s1", function(e) {
+        if (o) {
+            e.preventDefault(), a = null;
+            var i = $(this).closest("ul").data("k"),
+                t = $(this).hasClass("pick-arw-r") ? "right" : "left";
+            $(o, i, t)
+        }
+    }).on(v.i, F + " ul.pick.pick-y li", function() {
+        k = !0
+    }).on(v.e, F + " ul.pick.pick-y li", function() {
+        var e;
+        o && (!k || (e = o).jump >= e.key.y.max - e.key.y.min || (! function(t) {
+            var e = A(t, ".picker-jumped-years");
+            e.length && e.remove();
+            var r = $("<div>", {
+                class: "picker-jumped-years"
+            }).appendTo(A(t, ".picker"));
+            setTimeout(function() {
+                r.addClass("picker-jumper-years-visible")
+            }, 100);
+            for (var i = t.key.y.min; i <= t.key.y.max; i++) i % t.jump == 0 && $("<div>", {
+                "data-id": i
+            }).click(function(e) {
+                var i = $(this).data("id");
+                _(t, "y", i), W(t), r.removeClass("picker-jumper-years-visible"), setTimeout(function() {
+                    r.remove()
+                }, 300)
+            }).appendTo(r)
+        }(o), k = !1))
+    }).on(v.i, F + " ul.pick.pick-d li", function() {
+        o && (k = !0)
+    }).on(v.e, F + " ul.pick.pick-d li", function() {
+        o && k && (X(o), k = !1)
+    }).on(v.i, F + " ul.pick", function(e) {
+        if (o && (a = $(this))) {
+            var i = a.data("k");
+            n = f() ? e.originalEvent.touches[0].pageY : e.pageY, d = x(o, i)
+        }
+    }).on(v.m, function(e) {
+        if (o && (k = !1, a)) {
+            e.preventDefault();
+            var i = a.data("k"),
+                t = f() ? e.originalEvent.touches[0].pageY : e.pageY;
+            t = n - t, t = Math.round(.026 * t);
+            var r = z(o, i, d + t);
+            r != o.key[i].current && _(o, i, r), o.onPickerDragging && o.onPickerDragging({
+                key: i,
+                value: r
+            })
+        }
+    }).on(v.e, function(e) {
+        a && (d = n = a = null, o && (W(o), o.onPickerRelease && o.onPickerRelease(J(o))))
+    }).on(v.i, F + " .pick-submit", function() {
+        o && (G(o) || (ee(o, !0), B(o)))
+    }), $(window).resize(function() {
+        o && (I(o), b(o))
+    }), document.addEventListener("touchmove", function(e) {
+        var i = $(e.target).closest(".picker-jumped-years").length;
+        o && !i ? ($("html,body").css("touch-action", "none"), e.preventDefault()) : $("html,body").css("touch-action", "unset")
+    }, {
+        passive: !1
+    }), $.fn.dateDropper = function(e) {
+        if (m() && m() < 10) console.error("[DATEDROPPER] This browser is not supported");
+        else {
+            if ("object" == typeof e || !e) return l.init.apply(this, arguments);
+            if ("string" == typeof e && l[e]) return l[e].apply(this, Array.prototype.slice.call(arguments, 1));
+            console.error("[DATEDROPPER] This method not exist")
+        }
+    }, $("head").append("<style>" + $.dateDropperSetup.inlineCSS + "</style>"), $(document).ready(function() {
+        $.dateDropperSetup.autoInit && $(".datedropper-init,[data-datedropper]").each(function() {
+            $(this).dateDropper()
+        })
+    })
+})(jQuery);
