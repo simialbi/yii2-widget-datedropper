@@ -113,15 +113,15 @@ class Datedropper extends InputWidget
             'autoInit' => true,
             'inlineCss' => ''
         ]);
-        $this->view->registerJs("\$.dateDropperSetup = $js;", View::POS_READY, 'dateDropperSetup');
+        $this->view->registerJs("\$.dateDropperSetup = $js;", View::POS_HEAD, 'dateDropperSetup');
 
         $this->clientOptions = $this->getClientOptions();
 
         $this->registerPlugin('dateDropper');
 
         return ($this->hasModel())
-            ? Html::activeInput('text', $this->model, $this->attribute)
-            : Html::input($this->name, $this->value);
+            ? Html::activeInput('text', $this->model, $this->attribute, $this->options)
+            : Html::input($this->name, $this->value, $this->options);
     }
 
     /**
