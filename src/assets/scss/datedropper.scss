@@ -132,9 +132,7 @@ div.datedropper {
     }
 
     .pick-submit {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-        border-radius: 56px;
+        border-radius: 56px 56px 0 0;
         cursor: pointer;
         font-size: 24px;
         height: 100%;
@@ -801,7 +799,7 @@ div.datedropper {
         }
     }
 
-    .pick-dir div, .pick-lg b, .pick-lg-h, .pick-submit, &:not(.picker-clean), .pick:first-of-type, :not(.picker-clean):before {
+    .pick-dir div, .pick-lg b, .pick-lg-h, .pick-submit, &:not(.picker-clean), .pick:first-of-type, &:not(.picker-clean)::before, .pick-sl::before {
         background-color: #fd4741 !important;
         background-color: var(--dd-color1) !important;
     }
@@ -811,14 +809,12 @@ div.datedropper {
         color: var(--dd-color1) !important;
     }
 
-    .pick-lg-b {
-        &, .pick-wke, li:not(.pick-sl):not(.pick-h):after {
-            color: #fd4741 !important;
-            color: var(--dd-color1) !important;
-        }
+    .pick-lg-b li.pick-wke:not(.pick-sl):not(.pick-h)::after {
+        color: #fd4741 !important;
+        color: var(--dd-color1) !important;
     }
 
-    .pick-btn, .pick-btn:hover, .pick-l, .pick-lg-b li:not(.pick-sl):not(.pick-h):hover:before, .picker, .picker-jumped-years, &:before {
+    .pick-btn, .pick-btn:hover, .pick-l, .pick-lg-b li:not(.pick-sl):not(.pick-h):hover:before, .picker, .picker-jumped-years, &::before {
         background-color: white !important;
         background-color: var(--dd-color2) !important;
     }
