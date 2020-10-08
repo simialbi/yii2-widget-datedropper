@@ -102,11 +102,19 @@
                 }), picker && picker.element == t.element && removePicker(t));
             });
         },
-        getDate: function (i) {
-            return jQuery(this).each(function () {
-                var e = getPicker(jQuery(this));
-                e && i && i(getDateObject(e));
+        getDate: function (callback) {
+            var dates = [];
+            jQuery(this).each(function () {
+                var pick = getPicker(jQuery(this));
+                if (pick) {
+                    var dateObject = getDateObject(pick);
+                    if (callback) {
+                        callback(dateObject);
+                    }
+                    dates.push(dateObject);
+                }
             });
+            return (dates.length === 1) ? dates[0] : dates;
         }
     }, isClick = false, isIE = function () {
         var e = navigator.userAgent.toLowerCase();
