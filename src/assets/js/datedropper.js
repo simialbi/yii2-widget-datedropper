@@ -436,7 +436,7 @@
             if (dateFromString) {
                 jQuery.each(dateFromString, function (index, value) {
                     if (options.key[index]) {
-                        options.key[index] = value;
+                        options.key[index].current = value;
                     }
                 });
                 if (options.key.current > options.key.y.max) {
