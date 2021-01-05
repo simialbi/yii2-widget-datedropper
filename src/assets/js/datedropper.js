@@ -219,31 +219,100 @@
             return elements[elements.length - 1];
         }
         return elements[0];
-    }, j = function (e, i) {
+    }, buildPicker = function (e, callback) {
         var t = false;
-        for (var r in 'Y' != e.format && 'm' != e.format || (e.hideDay = !0, 'Y' == e.format && (e.hideMonth = !0), 'm' == e.format && (e.hideYear = !0), t = !0), (e.hideDay || e.hideMonth || e.hideYear) && (t = !0), e.largeOnly && (e.large = !0, e.largeDefault = !0), (e.hideMonth || e.hideDay || e.hideYear || e.showOnlyEnabledDays) && (e.largeOnly = !1, e.large = !1, e.largeDefault = !1), e.element = jQuery('<div>', {
+        if (e.format === 'Y' || e.format === 'm') {
+            e.hideDay = true;
+
+            if (e.format === 'Y') {
+                e.hideMonth = true;
+            }
+            if (e.format === 'm') {
+                e.hideYear = true;
+            }
+            t = true;
+        }
+        // 'Y' != e.format && 'm' != e.format || (e.hideDay = true, 'Y' == e.format && (e.hideMonth = !0), 'm' == e.format && (e.hideYear = !0), t = !0);
+        if (e.hideDay || e.hideMonth || e.hideYear) {
+            t = true;
+        }
+        if (e.largeOnly) {
+            e.large = true;
+            e.largeDefault = true;
+        }
+        if (e.hideMonth || e.hideDay || e.hideYear || e.showOnlyEnabledDays)  {
+            e.largeOnly = false;
+            e.large = false;
+            e.largeDefault = false;
+        }
+        e.element = jQuery('<div>', {
             class: 'datedropper ' + (t ? 'picker-clean' : '') + ' ' + (e.modal ? 'picker-modal' : '') + ' ' + e.theme + ' ' + (e.fx ? 'picker-fxs' : '') + ' ' + (e.large && e.largeDefault ? 'picker-lg' : ''),
             id: e.identifier,
             html: jQuery('<div>', {class: 'picker'})
-        }).appendTo('body'), e.key) {
-            var a = !0;
-            'y' == r && e.hideYear && (a = !1), 'd' == r && e.hideDay && (a = !1), 'm' == r && e.hideMonth && (a = !1), a && (jQuery('<ul>', {
-                class: 'pick pick-' + r,
-                'data-k': r,
-                tabindex: 0
-            }).appendTo(getPickerEls(e, '.picker')), K(e, r));
+        }).appendTo('body');
+        for (var key in e.key) {
+            var render = true;
+            if ((key === 'y' && e.hideYear) || (key === 'd' && e.hideDay) || (key === 'm' && e.hideMonth)) {
+                render = false;
+            }
+            if (render) {
+                jQuery('<ul>', {
+                    class: 'pick pick-' + key,
+                    'data-k': key,
+                    tabindex: 0
+                }).appendTo(getPickerEls(e, '.picker'));
+                K(e, key);
+            }
+            // 'y' == r && e.hideYear && (a = !1), 'd' == r && e.hideDay && (a = !1), 'm' == r && e.hideMonth && (a = !1), a && (jQuery('<ul>', {
+            //     class: 'pick pick-' + r,
+            //     'data-k': r,
+            //     tabindex: 0
+            // }).appendTo(getPickerEls(e, '.picker')), K(e, r));
         }
-        e.large && jQuery('<div>', {class: 'pick-lg'}).insertBefore(getPickerEls(e, '.pick-d')), jQuery('<div>', {class: 'pick-btns'}).appendTo(getPickerEls(e, '.picker')), jQuery('<div>', {
+        if (e.large) {
+            jQuery('<div>', {class: 'pick-lg'}).insertBefore(getPickerEls(e, '.pick-d'));
+        }
+        jQuery('<div>', {class: 'pick-btns'}).appendTo(getPickerEls(e, '.picker'));
+        jQuery('<div>', {
             tabindex: 0,
             class: 'pick-submit',
             html: jQuery(window.dateDropperSetup.icons.checkmark)
-        }).appendTo(getPickerEls(e, '.pick-btns')), e.large && !e.largeOnly && jQuery('<div>', {
-            class: 'pick-btn pick-btn-sz',
-            html: jQuery(window.dateDropperSetup.icons.expand)
-        }).appendTo(getPickerEls(e, '.pick-btns')), setTimeout(function () {
-            e.element.addClass('picker-focused'), isTouch() || setTimeout(function () {
+        }).appendTo(getPickerEls(e, '.pick-btns'));
+        if (e.large && !e.largeOnly) {
+            jQuery('<div>', {
+                class: 'pick-btn pick-btn-sz',
+                html: jQuery(window.dateDropperSetup.icons.expand)
+            }).appendTo(getPickerEls(e, '.pick-btns'));
+        }
+        // e.large && jQuery('<div>', {class: 'pick-lg'}).insertBefore(getPickerEls(e, '.pick-d')),
+        //     jQuery('<div>', {class: 'pick-btns'}).appendTo(getPickerEls(e, '.picker')), jQuery('<div>', {
+        //     tabindex: 0,
+        //     class: 'pick-submit',
+        //     html: jQuery(window.dateDropperSetup.icons.checkmark)
+        // }).appendTo(getPickerEls(e, '.pick-btns')), e.large && !e.largeOnly && jQuery('<div>', {
+        //     class: 'pick-btn pick-btn-sz',
+        //     html: jQuery(window.dateDropperSetup.icons.expand)
+        // }).appendTo(getPickerEls(e, '.pick-btns'));
+        setTimeout(function () {
+            e.element.addClass('picker-focused');
+            // if (isTouch() || setTimeout())
+            setTimeout(function () {
                 getPickerEls(e, '.pick:first-of-type').focus();
-            }, 100), e.element.hasClass('picker-modal') && (e.overlay = jQuery('<div class="picker-overlay"></div>').appendTo('body')), isFxMobile(e), I(e), W(e), picker = e, i && i();
+            });
+            isTouch() || setTimeout(function () {
+                getPickerEls(e, '.pick:first-of-type').focus();
+            }, 100);
+            if (e.element.hasClass('picker-modal')) {
+                e.overlay = jQuery('<div class="picker-overlay"></div>').appendTo('body')
+            }
+            // e.element.hasClass('picker-modal') && (e.overlay = jQuery('<div class="picker-overlay"></div>').appendTo('body')),
+            isFxMobile(e);
+            I(e);
+            W(e);
+            picker = e;
+            if (typeof callback === "function") {
+                callback();
+            }
         }, 100);
     }, getPicker = function ($el) {
         var id = $el.attr('data-datedropper-id');
@@ -461,21 +530,23 @@
             if (pick.overlay) {
                 pick.overlay.remove();
             }
-            j(pick);
+            buildPicker(pick);
         }
     }, showPicker = function (e) {
         picker && hidePicker(picker);
-        var t = getPicker(e);
-        t && j(t);
+        var element = getPicker(e);
+        if (element) {
+            buildPicker(element);
+        }
     }, hidePicker = function (pick) {
         if (pick.element) {
             pick.element.removeClass('picker-focused');
-            setTimeout(function () {
+            // setTimeout(function () {
                 pick.element.remove();
                 if (pick.overlay) {
                     pick.overlay.addClass('picker-overlay-hidden');
                 }
-            }, 400);
+            // }, 400);
             picker = null;
         }
     }, G = function (e) {
@@ -483,11 +554,12 @@
             var i, t, r = !1;
             return i = getUnix(getCurrent(e)), t = getUnix(getToday(e)), e.lock && ('from' == e.lock && (r = i < t), 'to' == e.lock && (r = t < i)), (e.minDate || e.maxDate) && (i = getUnix(getCurrent(e)), t = e.minDate ? getUnix(e.minDate) : null, c = e.maxDate ? getUnix(e.maxDate) : null, t && c ? r = i < t || i > c : t ? r = i < t : c && (r = i > c)), e.disabledDays && !e.enabledDays && (r = -1 != e.disabledDays.indexOf(i)), e.enabledDays && !e.disabledDays && (r = -1 == e.enabledDays.indexOf(i)), r ? (Z(e), e.element.addClass('picker-locked'), !0) : (e.element.removeClass('picker-locked'), !1);
         }
-    }, K = function (e, t) {
-        var r = getUl(e, t), a = e.key[t];
+    }, K = function (e, key) {
+        var r = getUl(e, key),
+            a = e.key[key];
         for (r.empty(), i = a.min; i <= a.max; i++) {
             var o = i;
-            'm' == t && (o = window.dateDropperSetup.languages[e.lang].months.short[i - 1]), o += 'd' == t ? '<span></span>' : '', jQuery('<li>', {
+            'm' == key && (o = window.dateDropperSetup.languages[e.lang].months.short[i - 1]), o += 'd' == key ? '<span></span>' : '', jQuery('<li>', {
                 value: i,
                 html: '<div>' + o + '</div>'
             }).appendTo(r);
@@ -497,12 +569,12 @@
                 class: 'pick-arw pick-arw-s1 pick-arw-' + i,
                 html: jQuery('<div>', {class: 'pick-i-' + i, html: jQuery(window.dateDropperSetup.icons.arrow[i])})
             }).appendTo(r);
-        }), 'y' == t && jQuery.each(['l', 'r'], function (e, i) {
+        }), 'y' == key && jQuery.each(['l', 'r'], function (e, i) {
             jQuery('<div>', {
                 class: 'pick-arw pick-arw-s2 pick-arw-' + i,
                 html: jQuery('<div>', {class: 'pick-i-' + i, html: jQuery(window.dateDropperSetup.icons.arrow[i])})
             }).appendTo(r);
-        }), U(e, t, getCurrent(e, t));
+        }), U(e, key, getCurrent(e, key));
     }, renderPickerLg = function (options) {
         getPickerEls(options, '.pick-lg').empty().append('<ul class="pick-lg-h"></ul><ul class="pick-lg-b"></ul>');
         var days = options.startFromMonday ? [1, 2, 3, 4, 5, 6, 0] : [0, 1, 2, 3, 4, 5, 6];
@@ -656,10 +728,29 @@
         (a.find('li').removeClass('pick-sl pick-bfr pick-afr'), t == getEq(e, i, 'last')) && ((r = a.find('li[value="' + getEq(e, i, 'first') + '"]')).clone().insertAfter(a.find('li[value=' + t + ']')), r.remove());
         t == getEq(e, i, 'first') && ((r = a.find('li[value="' + getEq(e, i, 'last') + '"]')).clone().insertBefore(a.find('li[value=' + t + ']')), r.remove());
         a.find('li[value=' + t + ']').addClass('pick-sl'), a.find('li.pick-sl').nextAll('li').addClass('pick-afr'), a.find('li.pick-sl').prevAll('li').addClass('pick-bfr');
-    }, _ = function (e, i, t) {
-        var r = e.key[i];
-        t > r.max && ('d' == i && e.autoIncrease && $(e, 'm', 'right'), 'm' == i && e.autoIncrease && $(e, 'y', 'right'), t = r.min), t < r.min && ('d' == i && e.autoIncrease && $(e, 'm', 'left'), 'm' == i && e.autoIncrease && $(e, 'y', 'left'), t = r.max), e.key[i].current = t, U(e, i, t);
-    }, $ = function (e, i, t) {
+    }, getCorrectValueForKey = function (e, key, value) {
+        var r = e.key[key];
+        if (value > r.max) {
+            if (key === 'd' && e.autoIncrease) {
+                incDec(e, 'm', 'right');
+            }
+            if (key === 'm' && e.autoIncrease) {
+                incDec(e, 'y', 'right');
+            }
+            value = r.min;
+        }
+        if (value < r.min) {
+            if (key === 'd' && e.autoIncrease) {
+                incDec(e, 'm', 'left');
+            }
+            if (key === 'm' && e.autoIncrease) {
+                incDec(e, 'y', 'left');
+            }
+            value = r.max;
+        }
+        e.key[key].current = value;
+        U(e, key, value);
+    }, incDec = function (e, key, direction) {
         if (e.showOnlyEnabledDays && e.enabledDays) {
             !function (t, e) {
                 for (var i = getUnix(getCurrent(t)), r = t.enabledDays, a = (r.length, null), o = 0; o < r.length; o++) {
@@ -668,12 +759,12 @@
                 'right' == e ? a++ : a--;
                 var n = !!r[a] && getDate(r[a]);
                 n && jQuery.each(n, function (e, i) {
-                    t.key[e].current = i, _(t, e, i);
+                    t.key[e].current = i, getCorrectValueForKey(t, e, i);
                 });
-            }(e, t);
+            }(e, direction);
         } else {
-            var r = getCurrent(e, i);
-            'right' == t ? r++ : r--, _(e, i, r);
+            var r = getCurrent(e, key);
+            'right' == direction ? r++ : r--, getCorrectValueForKey(e, key, r);
         }
     }, Z = function (e) {
         e.element.find('.picker').addClass('picker-rumble');
@@ -731,7 +822,7 @@
                         r = 'right';
                     }
                     var a = t.attr('data-k');
-                    $(picker, a, r), W(picker);
+                    incDec(picker, a, r), W(picker);
                 }
             }
         }
@@ -791,7 +882,7 @@
         if (picker) {
             e.preventDefault(), pickerCtrl = null;
             var i = jQuery(this).closest('ul').data('k'), t = jQuery(this).hasClass('pick-arw-r') ? 'right' : 'left';
-            $(picker, i, t);
+            incDec(picker, i, t);
         }
     }).on(uiEvent.i, F + ' ul.pick.pick-y li', function () {
         isClick = !0;
@@ -807,7 +898,7 @@
             for (var i = t.key.y.min; i <= t.key.y.max; i++) {
                 i % t.jump == 0 && jQuery('<div>', {'data-id': i}).click(function (e) {
                     var i = jQuery(this).data('id');
-                    _(t, 'y', i), W(t), r.removeClass('picker-jumper-years-visible'), setTimeout(function () {
+                    getCorrectValueForKey(t, 'y', i), W(t), r.removeClass('picker-jumper-years-visible'), setTimeout(function () {
                         r.remove();
                     }, 300);
                 }).appendTo(r);
@@ -828,7 +919,7 @@
             var i = pickerCtrl.data('k'), t = isTouch() ? e.originalEvent.touches[0].pageY : e.pageY;
             t = pickDragged - t, t = Math.round(.026 * t);
             var r = getClear(picker, i, pickDragTemp + t);
-            r != picker.key[i].current && _(picker, i, r), picker.onPickerDragging && picker.onPickerDragging({
+            r != picker.key[i].current && getCorrectValueForKey(picker, i, r), picker.onPickerDragging && picker.onPickerDragging({
                 key: i,
                 value: r
             });
