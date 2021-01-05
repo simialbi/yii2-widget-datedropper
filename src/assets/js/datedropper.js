@@ -236,10 +236,10 @@
         e.large && jQuery('<div>', {class: 'pick-lg'}).insertBefore(getPickerEls(e, '.pick-d')), jQuery('<div>', {class: 'pick-btns'}).appendTo(getPickerEls(e, '.picker')), jQuery('<div>', {
             tabindex: 0,
             class: 'pick-submit',
-            html: jQuery(jQuery.dateDropperSetup.icons.checkmark)
+            html: jQuery(window.dateDropperSetup.icons.checkmark)
         }).appendTo(getPickerEls(e, '.pick-btns')), e.large && !e.largeOnly && jQuery('<div>', {
             class: 'pick-btn pick-btn-sz',
-            html: jQuery(jQuery.dateDropperSetup.icons.expand)
+            html: jQuery(window.dateDropperSetup.icons.expand)
         }).appendTo(getPickerEls(e, '.pick-btns')), setTimeout(function () {
             e.element.addClass('picker-focused'), isTouch() || setTimeout(function () {
                 getPickerEls(e, '.pick:first-of-type').focus();
@@ -281,10 +281,10 @@
             year = date.y,
             o = new Date(month + '/' + day + '/' + year).getDay(),
             dateObject = {
-                F: jQuery.dateDropperSetup.languages[options.lang].months.full[month - 1],
-                M: jQuery.dateDropperSetup.languages[options.lang].months.short[month - 1],
-                D: jQuery.dateDropperSetup.languages[options.lang].weekdays.full[o].substr(0, 3),
-                l: jQuery.dateDropperSetup.languages[options.lang].weekdays.full[o],
+                F: window.dateDropperSetup.languages[options.lang].months.full[month - 1],
+                M: window.dateDropperSetup.languages[options.lang].months.short[month - 1],
+                D: window.dateDropperSetup.languages[options.lang].weekdays.full[o].substr(0, 3),
+                l: window.dateDropperSetup.languages[options.lang].weekdays.full[o],
                 d: getZeroFilled(day),
                 m: getZeroFilled(month),
                 S: getOrdinalSuffixed(day),
@@ -338,7 +338,7 @@
         options.jump = isInt(options.jump) ? options.jump : 10;
         options.maxYear = isInt(options.maxYear) ? options.maxYear : (new Date).getFullYear() + 50;
         options.minYear = isInt(options.minYear) ? options.minYear : (new Date).getFullYear() - 50;
-        options.lang = (options.lang in jQuery.dateDropperSetup.languages) ? options.lang : 'en';
+        options.lang = (options.lang in window.dateDropperSetup.languages) ? options.lang : 'en';
         options.key = {
             m: {
                 min: 1,
@@ -487,7 +487,7 @@
         var r = getUl(e, t), a = e.key[t];
         for (r.empty(), i = a.min; i <= a.max; i++) {
             var o = i;
-            'm' == t && (o = jQuery.dateDropperSetup.languages[e.lang].months.short[i - 1]), o += 'd' == t ? '<span></span>' : '', jQuery('<li>', {
+            'm' == t && (o = window.dateDropperSetup.languages[e.lang].months.short[i - 1]), o += 'd' == t ? '<span></span>' : '', jQuery('<li>', {
                 value: i,
                 html: '<div>' + o + '</div>'
             }).appendTo(r);
@@ -495,19 +495,19 @@
         jQuery.each(['l', 'r'], function (e, i) {
             jQuery('<div>', {
                 class: 'pick-arw pick-arw-s1 pick-arw-' + i,
-                html: jQuery('<div>', {class: 'pick-i-' + i, html: jQuery(jQuery.dateDropperSetup.icons.arrow[i])})
+                html: jQuery('<div>', {class: 'pick-i-' + i, html: jQuery(window.dateDropperSetup.icons.arrow[i])})
             }).appendTo(r);
         }), 'y' == t && jQuery.each(['l', 'r'], function (e, i) {
             jQuery('<div>', {
                 class: 'pick-arw pick-arw-s2 pick-arw-' + i,
-                html: jQuery('<div>', {class: 'pick-i-' + i, html: jQuery(jQuery.dateDropperSetup.icons.arrow[i])})
+                html: jQuery('<div>', {class: 'pick-i-' + i, html: jQuery(window.dateDropperSetup.icons.arrow[i])})
             }).appendTo(r);
         }), U(e, t, getCurrent(e, t));
     }, renderPickerLg = function (options) {
         getPickerEls(options, '.pick-lg').empty().append('<ul class="pick-lg-h"></ul><ul class="pick-lg-b"></ul>');
         var days = options.startFromMonday ? [1, 2, 3, 4, 5, 6, 0] : [0, 1, 2, 3, 4, 5, 6];
         for (var i = 0; i < 7; i++) {
-            jQuery('<li>', {html: '<div>' + jQuery.dateDropperSetup.languages[options.lang].weekdays.short[days[i]] + '</div>'}).appendTo(getPickerEls(options, '.pick-lg .pick-lg-h'));
+            jQuery('<li>', {html: '<div>' + window.dateDropperSetup.languages[options.lang].weekdays.short[days[i]] + '</div>'}).appendTo(getPickerEls(options, '.pick-lg .pick-lg-h'));
         }
         for (i = 0; i < 42; i++) {
             jQuery('<li>', {html: jQuery('<div>')}).appendTo(getPickerEls(options, '.pick-lg .pick-lg-b'));
@@ -640,7 +640,7 @@
                                                                                                                                                                                    30,
                                                                                                                                                                                    31][r - 1], getCurrent(t, 'd') > t.key.d.max && (t.key.d.current = t.key.d.max, U(t, 'd', getCurrent(t, 'd'))), getPickerEls(t, '.pick-d li').removeClass('pick-wke').each(function () {
             var e = new Date(r + '/' + jQuery(this).attr('value') + '/' + a).getDay();
-            jQuery(this).find('span').html(jQuery.dateDropperSetup.languages[t.lang].weekdays.full[e]), 0 != e && 6 != e || jQuery(this).addClass('pick-wke');
+            jQuery(this).find('span').html(window.dateDropperSetup.languages[t.lang].weekdays.full[e]), 0 != e && 6 != e || jQuery(this).addClass('pick-wke');
         }), t.element.hasClass('picker-lg') && (getPickerEls(t, '.pick-lg-b li').removeClass('pick-wke'), getPickerEls(t, '.pick-lg-b li.pick-v').each(function () {
             var e = new Date(r + '/' + jQuery(this).attr('data-value') + '/' + a).getDay();
             0 != e && 6 != e || jQuery(this).addClass('pick-wke');
@@ -866,7 +866,7 @@
         }
     };
     jQuery(document).ready(function () {
-        jQuery.dateDropperSetup.autoInit && jQuery('.datedropper-init,[data-datedropper]').each(function () {
+        window.dateDropperSetup.autoInit && jQuery('.datedropper-init,[data-datedropper]').each(function () {
             jQuery(this).dateDropper();
         });
     });

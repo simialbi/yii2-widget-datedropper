@@ -112,7 +112,7 @@ class Datedropper extends InputWidget
             'icons' => $this->icons,
             'autoInit' => true
         ]);
-        $this->view->registerJs("\$.dateDropperSetup = $js;", View::POS_HEAD, 'dateDropperSetup');
+        $this->view->registerJs("window.dateDropperSetup = $js;", View::POS_HEAD, 'dateDropperSetup');
 
         $this->clientOptions = $this->getClientOptions();
 
