@@ -162,7 +162,7 @@
         if (roundtrip) {
             jQuery.each(roundtrip, function (index, value) {
                 var current = getDate(value.value);
-                if (current.m === getCurrent(current, 'm') && current.y === getCurrent(options, 'y')) {
+                if (current.m === getCurrent(options, 'm') && current.y === getCurrent(options, 'y')) {
                     getPickerEls(options, '.pick-lg-b li.pick-v[data-value=' + current.d + ']').addClass('pick-sl pick-sl-' + index);
                 }
             });
