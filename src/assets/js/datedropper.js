@@ -169,7 +169,7 @@
             a = getPickerEls(options, '.pick-lg-b li.pick-sl-a');
             b = (element) ? element : getPickerEls(options, '.pick-lg-b li.pick-sl-b');
             newRoundtrip = {
-                a: a.length ? getPickerEls(options, 'pick-lg-b li').index(a) + 1 : 0,
+                a: a.length ? getPickerEls(options, '.pick-lg-b li').index(a) + 1 : 0,
                 b: b.length ? getPickerEls(options, '.pick-lg-b li').index(b) - 1 : getPickerEls(options, '.pick-lg-b li').last().index()
             };
             if (roundtrip.a.value !== roundtrip.b.value && element) {
