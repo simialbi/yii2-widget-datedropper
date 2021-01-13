@@ -192,7 +192,7 @@
             }
             if (p) {
                 for (var index = newRoundtrip.a; index <= newRoundtrip.b; index++) {
-                    getPickerEls(options, 'pick-lg-b li').eq(index).addClass('pick-dir');
+                    getPickerEls(options, '.pick-lg-b li').eq(index).addClass('pick-dir');
                 }
             }
         }
