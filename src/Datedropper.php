@@ -115,11 +115,15 @@ class Datedropper extends InputWidget
         $this->view->registerJs("window.dateDropperSetup = $js;", View::POS_HEAD, 'dateDropperSetup');
 
         $this->clientOptions = $this->getClientOptions();
-        if (isset($this->clientOptions['roundtrip']) && !isset($this->options['data-dd-roundtrip']) && !isset($this->options['data']['dd-roundtrip'])) {
-            $this->options['data']['dd-roundtrip'] = $this->clientOptions['roundtrip'];
+        $selector = null;
+        if (isset($this->clientOptions['roundtrip'])) {
+            if (!isset($this->options['data-dd-roundtrip']) && !isset($this->options['data']['dd-roundtrip'])) {
+                $this->options['data']['dd-roundtrip'] = $this->clientOptions['roundtrip'];
+            }
+            $selector = "input[data-dd-roundtrip=\"{$this->clientOptions['roundtrip']}\"]";
         }
 
-        $this->registerPlugin('dateDropper');
+        $this->registerPlugin('dateDropper', $selector);
 
         return ($this->hasModel())
             ? Html::activeInput('text', $this->model, $this->attribute, $this->options)
