@@ -105,10 +105,18 @@
         },
         setDate: function (e) {
             return jQuery(this).each(function () {
-                var t = getPicker(jQuery(this));
-                t && (jQuery.each(e, function (e, i) {
-                    'y' == e && t.key[e] && i > t.key[e].max && (t.key[e].max = i), t.key[e].current = i;
-                }), picker && picker.element == t.element && removePicker(t));
+                var pick = getPicker(jQuery(this));
+                if (pick) {
+                    jQuery.each(e, function (index, value) {
+                        if (index === 'y' && pick.key[index] && value > pick.key[index].max) {
+                            pick.key[index].max = value;
+                        }
+                        pick.key[index].current = value;
+                    });
+                    if (picker && picker.element === pick.element) {
+                        removePicker(pick);
+                    }
+                }
             });
         },
         getDate: function (callback) {
