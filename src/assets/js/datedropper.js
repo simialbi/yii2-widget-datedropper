@@ -183,7 +183,7 @@
                 }
             } else {
                 unixDate = getUnix(getCurrent(options));
-                if (unixDate >= roundtrip.a.value && unixDate <= roundtrip.b.value && a.length) {
+                if ((unixDate >= roundtrip.a.value && unixDate <= roundtrip.b.value) || a.length) {
                     p = true;
                 }
             }
