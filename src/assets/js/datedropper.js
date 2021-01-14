@@ -61,10 +61,19 @@
                 i && hidePicker(i);
             });
         },
-        destroy: function (i) {
+        destroy: function (callback) {
             return jQuery(this).each(function () {
-                var e = getPicker(jQuery(this));
-                e && (picker && e.identifier == picker.identifier && hidePicker(picker), jQuery(this).removeAttr('data-datedropper-id').removeClass('picker-trigger').off(e.eventListener), delete e, i && i());
+                var options = getPicker(jQuery(this));
+                if (options) {
+                    if (picker && options.identifier === picker.identifier) {
+                        hidePicker(picker);
+                    }
+                    jQuery(this).removeAttr('data-datedropper-id').removeClass('picker-trigger').off(options.eventListener);
+                    options = undefined;
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                }
             });
         },
         set: function (val) {
