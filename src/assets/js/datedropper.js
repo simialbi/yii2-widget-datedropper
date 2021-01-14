@@ -156,9 +156,9 @@
             var a;
         });
         return options;
-    }, w = function (options, element) {
-        var newRoundtrip, roundtrip = getRoundtrip(options),
-            a = false, b = false, p = false, s = true;
+    }, updateRoundTrip = function (options, element) {
+        var roundtripData, roundtrip = getRoundtrip(options),
+            roundtripStart = false, roundtripEnd = false, hasDatesBetween = false, s = true;
         if (roundtrip) {
             jQuery.each(roundtrip, function (index, value) {
                 var current = getDate(value.value);
@@ -166,11 +166,11 @@
                     getPickerEls(options, '.pick-lg-b li.pick-v[data-value=' + current.d + ']').addClass('pick-sl pick-sl-' + index);
                 }
             });
-            a = getPickerEls(options, '.pick-lg-b li.pick-sl-a');
-            b = (element) ? element : getPickerEls(options, '.pick-lg-b li.pick-sl-b');
-            newRoundtrip = {
-                a: a.length ? getPickerEls(options, '.pick-lg-b li').index(a) + 1 : 0,
-                b: b.length ? getPickerEls(options, '.pick-lg-b li').index(b) - 1 : getPickerEls(options, '.pick-lg-b li').last().index()
+            roundtripStart = getPickerEls(options, '.pick-lg-b li.pick-sl-a');
+            roundtripEnd = (element) ? element : getPickerEls(options, '.pick-lg-b li.pick-sl-b');
+            roundtripData = {
+                a: roundtripStart.length ? getPickerEls(options, '.pick-lg-b li').index(roundtripStart) + 1 : 0,
+                b: roundtripEnd.length ? getPickerEls(options, '.pick-lg-b li').index(roundtripEnd) - 1 : getPickerEls(options, '.pick-lg-b li').last().index()
             };
             if (roundtrip.a.value !== roundtrip.b.value && element) {
                 s = false;
@@ -179,25 +179,25 @@
             if (element) {
                 unixDate = getUnix(getCurrent(options, 'm') + '/' + element.attr('data-value') + '/' + getCurrent(options, 'y'));
                 if (roundtrip.a.value === roundtrip.b.value && unixDate > roundtrip.a.value) {
-                    p = true;
+                    hasDatesBetween = true;
                 }
             } else {
                 unixDate = getUnix(getCurrent(options));
-                if ((unixDate >= roundtrip.a.value && unixDate <= roundtrip.b.value) || a.length) {
-                    p = true;
+                if ((unixDate >= roundtrip.a.value && unixDate <= roundtrip.b.value) || roundtripStart.length) {
+                    hasDatesBetween = true;
                 }
             }
             if (s) {
                 getPickerEls(options, '.pick-lg-b li').removeClass('pick-dir pick-dir-sl pick-dir-first pick-dir-last');
             }
-            if (p) {
-                for (var index = newRoundtrip.a; index <= newRoundtrip.b; index++) {
+            if (hasDatesBetween) {
+                for (var index = roundtripData.a; index <= roundtripData.b; index++) {
                     getPickerEls(options, '.pick-lg-b li').eq(index).addClass('pick-dir');
                 }
             }
         }
-        a.next('.pick-dir').addClass('pick-dir-first');
-        b.prev('.pick-dir').addClass('pick-dir-last');
+        roundtripStart.next('.pick-dir').addClass('pick-dir-first');
+        roundtripEnd.prev('.pick-dir').addClass('pick-dir-last');
     }, getCurrent = function (date, part) {
         return part ? parseInt(date.key[part].current) : getCurrent(date, 'm') + '/' + getCurrent(date, 'd') + '/' + getCurrent(date, 'y');
     }, getToday = function (date, part) {
@@ -689,7 +689,7 @@
             })
         }
         if (options.roundtrip) {
-            w(options);
+            updateRoundTrip(options);
         } else {
             getPickerEls(options, '.pick-lg-b li.pick-v[data-value=' + getCurrent(options, 'd') + ']').addClass('pick-sl');
         }
@@ -856,9 +856,13 @@
             W(picker);
         }
     }).on('mouseleave', F + ' .pick-lg .pick-lg-b li', function () {
-        picker && picker.roundtrip && w(picker);
+        if (picker && picker.roundtrip) {
+            updateRoundTrip(picker);
+        }
     }).on('mouseenter', F + ' .pick-lg .pick-lg-b li', function () {
-        picker && picker.roundtrip && w(picker, jQuery(this));
+        if (picker && picker.roundtrip) {
+            updateRoundTrip(picker, jQuery(this));
+        }
     }).on('click', F + ' .pick-btn-sz', function () {
         picker && X(picker);
     }).on(uiEvent.i, F + ' .pick-arw.pick-arw-s2', function (e) {
