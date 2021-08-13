@@ -127,7 +127,7 @@ class Datedropper extends InputWidget
 
         return ($this->hasModel())
             ? Html::activeInput('text', $this->model, $this->attribute, $this->options)
-            : Html::input($this->name, $this->value, $this->options);
+            : Html::input('text', $this->name, $this->value, $this->options);
     }
 
     /**
