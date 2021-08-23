@@ -614,7 +614,10 @@
         date.setMonth(date.getMonth() - 1);
         firstOfMonth.setDate(1);
         var s = firstOfMonth.getDay() - 1;
-        if ((s < 0) || (options.startFromMonday && --s < 0)) {
+        if (s < 0) {
+            s = 6;
+        }
+        if (options.startFromMonday && --s < 0) {
             s = 6;
         }
         for (i = getMonthDays(date) - s; i <= getMonthDays(date); i++) {
