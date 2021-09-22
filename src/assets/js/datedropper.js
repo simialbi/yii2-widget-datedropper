@@ -39,7 +39,7 @@
                         trigger: false,
                         minDate: false,
                         maxDate: false,
-                        autofill: true,
+                        autofill: false,
                         autoIncrease: true,
                         showOnlyEnabledDays: false,
                         changeValueTo: false,
@@ -89,7 +89,7 @@
                         if (index !== 'roundtrip') {
                             pick[index] = value;
                         } else {
-                            console.error('[DATEDROPPER] You can\'t set roundtrip after main initialization')
+                            console.error('[DATEDROPPER] You can\'t set roundtrip after main initialization');
                         }
                     });
                     pick.selector.off(pick.eventListener);
@@ -147,9 +147,17 @@
     };
     var uiEvent;
     if (isTouch()) {
-        uiEvent = {i: 'touchstart', m: 'touchmove', e: 'touchend'};
+        uiEvent = {
+            i: 'touchstart',
+            m: 'touchmove',
+            e: 'touchend'
+        };
     } else {
-        uiEvent = {i: 'mousedown', m: 'mousemove', e: 'mouseup'};
+        uiEvent = {
+            i: 'mousedown',
+            m: 'mousemove',
+            e: 'mouseup'
+        };
     }
     var getDataOptions = function ($el) {
         var options = {}, regExp = /^data-dd-(.+)$/;
@@ -174,8 +182,8 @@
         });
         return options;
     }, updateRoundTrip = function (options, element) {
-        var roundtripData, roundtrip = getRoundtrip(options),
-            roundtripStart = false, roundtripEnd = false, hasDatesBetween = false, s = true;
+        var roundtripData, roundtrip = getRoundtrip(options), roundtripStart = false, roundtripEnd = false,
+            hasDatesBetween = false, s = true;
         if (roundtrip) {
             jQuery.each(roundtrip, function (index, value) {
                 var current = getDate(value.value);
@@ -222,8 +230,171 @@
     }, getClear = function (options, key, t) {
         var keyValues = options.key[key];
         return t > keyValues.max ? getClear(options, key, t - keyValues.max + (keyValues.min - 1)) : t < keyValues.min ? getClear(options, key, t + 1 + (keyValues.max - keyValues.min)) : t;
+    }, parseDate = function (format, value, options) {
+        if (format == null || value == null) {
+            throw 'Invalid arguments';
+        }
+
+        value = (typeof value === 'object' ? value.toString() : value + '');
+        if (value === '') {
+            return null;
+        }
+
+        var iFormat, extra, iValue = 0,
+            shortYearCutoffTemp = '+10',
+            shortYearCutoff = new Date().getFullYear() % 100 + parseInt(shortYearCutoffTemp, 10),
+            dayNamesShort = window.dateDropperSetup.languages[options.lang].weekdays.short,
+            dayNames = window.dateDropperSetup.languages[options.lang].weekdays.full,
+            monthNamesShort = window.dateDropperSetup.languages[options.lang].months.short,
+            monthNames = window.dateDropperSetup.languages[options.lang].months.full, year = -1, month = -1,
+            day = -1, /* doy = -1, */ literal = false, date,
+
+            // Check whether a format character is doubled
+            lookAhead = function (match) {
+                var matches = (iFormat + 1 < format.length && format.charAt(iFormat + 1) === match);
+                if (matches) {
+                    iFormat++;
+                }
+                return matches;
+            },
+
+            // Extract a number from the string value
+            getNumber = function (match) {
+                var /* isDoubled = lookAhead(match), */
+                    size = (match === 'U' ? 14 : (match === '!' ? 20 : (match === 'y' ? 4 : (match === 'o' ? 3 : 2)))),
+                    minSize = (match === 'y' ? size : 1), digits = new RegExp('^\\d{' + minSize + ',' + size + '}'),
+                    num = value.substring(iValue).match(digits);
+                if (!num) {
+                    throw 'Missing number at position ' + iValue;
+                }
+                iValue += num[0].length;
+                return parseInt(num[0], 10);
+            },
+
+            // Extract a name from the string value and convert to an index
+            getName = function (match, shortNames, longNames) {
+                var index = -1, names = jQuery.map(lookAhead(match) ? longNames : shortNames, function (v, k) {
+                    return [[k, v]];
+                }).sort(function (a, b) {
+                    return -(a[1].length - b[1].length);
+                });
+
+                jQuery.each(names, function (i, pair) {
+                    var name = pair[1];
+                    if (value.substr(iValue, name.length).toLowerCase() === name.toLowerCase()) {
+                        index = pair[0];
+                        iValue += name.length;
+                        return false;
+                    }
+                });
+                if (index !== -1) {
+                    return index + 1;
+                } else {
+                    throw 'Unknown name at position ' + iValue;
+                }
+            },
+
+            // Confirm that a literal character matches the string value
+            checkLiteral = function () {
+                if (value.charAt(iValue) !== format.charAt(iFormat)) {
+                    throw 'Unexpected literal at position ' + iValue;
+                }
+                iValue++;
+            };
+
+        for (iFormat = 0; iFormat < format.length; iFormat++) {
+            if (literal) {
+                if (format.charAt(iFormat) === '\'' && !lookAhead('\'')) {
+                    literal = false;
+                } else {
+                    checkLiteral();
+                }
+            } else {
+                switch (format.charAt(iFormat)) {
+                    case 'd':
+                    case 'j':
+                        day = getNumber('d');
+                        break;
+                    case 'D':
+                    case 'l':
+                        getName('D', dayNamesShort, dayNames);
+                        break;
+                    // case 'o':
+                    //     doy = getNumber('o');
+                    //     break;
+                    case 'm':
+                    case 'n':
+                        month = getNumber('m');
+                        break;
+                    case 'M':
+                    case 'F':
+                        month = getName('M', monthNamesShort, monthNames);
+                        break;
+                    // case 'y':
+                    case 'Y':
+                        year = getNumber('y');
+                        break;
+                    case 'U':
+                        date = new Date(getNumber('@'));
+                        year = date.getFullYear();
+                        month = date.getMonth() + 1;
+                        day = date.getDate();
+                        break;
+                    // case '!':
+                    //     date = new Date((getNumber('!') - this._ticksTo1970) / 10000);
+                    //     year = date.getFullYear();
+                    //     month = date.getMonth() + 1;
+                    //     day = date.getDate();
+                    //     break;
+                    case '\'':
+                        if (lookAhead('\'')) {
+                            checkLiteral();
+                        } else {
+                            literal = true;
+                        }
+                        break;
+                    default:
+                        checkLiteral();
+                }
+            }
+        }
+
+        if (iValue < value.length) {
+            extra = value.substr(iValue);
+            if (!/^\s+/.test(extra)) {
+                throw 'Extra/unparsed characters found in date: ' + extra;
+            }
+        }
+
+        if (year === -1) {
+            year = new Date().getFullYear();
+        } else if (year < 100) {
+            year += new Date().getFullYear() - new Date().getFullYear() % 100 + (year <= shortYearCutoff ? 0 : -100);
+        }
+
+        // if (doy > -1) {
+        //     month = 1;
+        //     day = doy;
+        //     do {
+        //         dim = this._getDaysInMonth(year, month - 1);
+        //         if (day <= dim) {
+        //             break;
+        //         }
+        //         month++;
+        //         day -= dim;
+        //     } while (true);
+        // }
+
+        date = new Date(year, month - 1, day);
+        if (date.getFullYear() !== year || date.getMonth() + 1 !== month || date.getDate() !== day) {
+            throw 'Invalid date'; // E.g. 31/02/00
+        }
+        return date;
     }, T = function (e) {
-        return !!e && {selector: e.selector, date: getDateObject(e)};
+        return !!e && {
+            selector: e.selector,
+            date: getDateObject(e)
+        };
     }, getUl = function (e, i) {
         return getPickerEls(e, 'ul.pick[data-k="' + i + '"]');
     }, getEq = function (e, i, which) {
@@ -257,7 +428,7 @@
             e.large = true;
             e.largeDefault = true;
         }
-        if (e.hideMonth || e.hideDay || e.hideYear || e.showOnlyEnabledDays)  {
+        if (e.hideMonth || e.hideDay || e.hideYear || e.showOnlyEnabledDays) {
             e.largeOnly = false;
             e.large = false;
             e.largeDefault = false;
@@ -320,14 +491,14 @@
                 getPickerEls(e, '.pick:first-of-type').focus();
             }, 100);
             if (e.element.hasClass('picker-modal')) {
-                e.overlay = jQuery('<div class="picker-overlay"></div>').appendTo('body')
+                e.overlay = jQuery('<div class="picker-overlay"></div>').appendTo('body');
             }
             // e.element.hasClass('picker-modal') && (e.overlay = jQuery('<div class="picker-overlay"></div>').appendTo('body')),
             isFxMobile(e);
             I(e);
             W(e);
             picker = e;
-            if (typeof callback === "function") {
+            if (typeof callback === 'function') {
                 callback();
             }
         }, 100);
@@ -362,10 +533,7 @@
             };
         }
         date || (date = {});
-        var day = date.d,
-            month = date.m,
-            year = date.y,
-            o = new Date(month + '/' + day + '/' + year).getDay(),
+        var day = date.d, month = date.m, year = date.y, o = new Date(month + '/' + day + '/' + year).getDay(),
             dateObject = {
                 F: window.dateDropperSetup.languages[options.lang].months.full[month - 1],
                 M: window.dateDropperSetup.languages[options.lang].months.short[month - 1],
@@ -391,10 +559,13 @@
         return Date.parse(e) / 1000;
     }, getDate = function (e) {
         var i = new Date(1000 * e);
-        return {m: i.getMonth() + 1, y: i.getFullYear(), d: i.getDate()};
+        return {
+            m: i.getMonth() + 1,
+            y: i.getFullYear(),
+            d: i.getDate()
+        };
     }, getRoundtrip = function (options) {
-        var selector = '[data-dd-roundtrip="' + options.roundtrip + '"]',
-            returnValue = false;
+        var selector = '[data-dd-roundtrip="' + options.roundtrip + '"]', returnValue = false;
         if (jQuery(selector).length) {
             returnValue = {};
             jQuery.each(['a', 'b'], function (index, value) {
@@ -418,9 +589,20 @@
     }, I = function (e) {
         if (!e.element.hasClass('picker-modal')) {
             var i = e.selector, t = i.offset().left + i.outerWidth() / 2, r = i.offset().top + i.outerHeight();
-            e.element.css({left: t, top: r});
+            e.element.css({
+                left: t,
+                top: r
+            });
         }
     }, initPicker = function (options) {
+        var date;
+        try {
+            date = parseDate(options.format, options.selector.val(), options);
+            setCurrent(options, date);
+        } catch (e) {
+            console.log(e);
+            date = false;
+        }
         options.jump = isInt(options.jump) ? options.jump : 10;
         options.maxYear = isInt(options.maxYear) ? options.maxYear : (new Date).getFullYear() + 50;
         options.minYear = isInt(options.minYear) ? options.minYear : (new Date).getFullYear() - 50;
@@ -429,19 +611,19 @@
             m: {
                 min: 1,
                 max: 12,
-                current: (new Date).getMonth() + 1,
+                current: date ? date.getMonth() + 1 : (new Date).getMonth() + 1,
                 today: (new Date).getMonth() + 1
             },
             d: {
                 min: 1,
                 max: 31,
-                current: (new Date).getDate(),
+                current: date ? date.getDate() : (new Date).getDate(),
                 today: (new Date).getDate()
             },
             y: {
                 min: options.minYear,
                 max: options.maxYear,
-                current: (new Date).getFullYear(),
+                current: date ? date.getFullYear() : (new Date).getFullYear(),
                 today: (new Date).getFullYear()
             }
         };
@@ -455,12 +637,12 @@
             options.key.y.current = options.key.y.min;
         }
         if (options.minDate) {
-            var defaultDate = !!options.defaultDate && getUnix(options.defaultDate),
+            var defaultDate = date ? getUnix(date) : !!options.defaultDate && getUnix(options.defaultDate),
                 minDate = !!options.minDate && getUnix(options.minDate);
             if (defaultDate && defaultDate < minDate) {
                 options.defaultDate = options.minDate;
             } else {
-                options.defaultDate = options.minDate;
+                options.defaultDate = date || options.minDate;
             }
             setCurrent(options, getDate(getUnix(options.defaultDate)));
         }
@@ -489,14 +671,14 @@
             var unixDate = getUnix(getCurrent(options)),
                 roundTrip = jQuery('[data-dd-roundtrip="' + options.roundtrip + '"]');
             if (roundTrip.length > 1) {
-                roundTrip.each(function () {
-                    var which = roundTrip.index(jQuery(this)) === 0 ? 'a' : 'b';
-                    var defaultRoundtrip = jQuery(this).attr('data-dd-roundtrip-default' + which);
+                // roundTrip.each(function () {
+                    var which = roundTrip.index(options.selector) === 0 ? 'a' : 'b';
+                    var defaultRoundtrip = options.selector.attr('data-dd-roundtrip-default-' + which);
                     var _new = (defaultRoundtrip) ? getUnix(i) : unixDate;
                     if (_new) {
-                        jQuery(this).attr('data-dd-roundtrip-' + which, _new);
+                        options.selector.attr('data-dd-roundtrip-' + which, _new);
                     }
-                });
+                // });
             } else {
                 jQuery.each(['a', 'b'], function (index, value) {
                     var defaultRoundtrip = options.selector.attr('data-dd-roundtrip-default-' + value);
@@ -506,8 +688,8 @@
                     }
                 });
             }
-            var roundtrip = getRoundtrip(options),
-                date = getDate(roundtrip.a.value);
+            var roundtrip = getRoundtrip(options);
+            date = getDate(roundtrip.a.value);
             // console.log(options.defaultDate);
             options.defaultDate = date.m + '/' + date.d + '/' + date.y;
             options.largeOnly = true;
@@ -559,10 +741,10 @@
         if (pick.element) {
             pick.element.removeClass('picker-focused');
             // setTimeout(function () {
-                pick.element.remove();
-                if (pick.overlay) {
-                    pick.overlay.addClass('picker-overlay-hidden');
-                }
+            pick.element.remove();
+            if (pick.overlay) {
+                pick.overlay.addClass('picker-overlay-hidden');
+            }
             // }, 400);
             picker = null;
         }
@@ -572,8 +754,7 @@
             return i = getUnix(getCurrent(e)), t = getUnix(getToday(e)), e.lock && ('from' == e.lock && (r = i < t), 'to' == e.lock && (r = t < i)), (e.minDate || e.maxDate) && (i = getUnix(getCurrent(e)), t = e.minDate ? getUnix(e.minDate) : null, c = e.maxDate ? getUnix(e.maxDate) : null, t && c ? r = i < t || i > c : t ? r = i < t : c && (r = i > c)), e.disabledDays && !e.enabledDays && (r = -1 != e.disabledDays.indexOf(i)), e.enabledDays && !e.disabledDays && (r = -1 == e.enabledDays.indexOf(i)), r ? (Z(e), e.element.addClass('picker-locked'), !0) : (e.element.removeClass('picker-locked'), !1);
         }
     }, K = function (e, key) {
-        var r = getUl(e, key),
-            a = e.key[key];
+        var r = getUl(e, key), a = e.key[key];
         for (r.empty(), i = a.min; i <= a.max; i++) {
             var o = i;
             'm' == key && (o = window.dateDropperSetup.languages[e.lang].months.short[i - 1]), o += 'd' == key ? '<span></span>' : '', jQuery('<li>', {
@@ -584,12 +765,18 @@
         jQuery.each(['l', 'r'], function (e, i) {
             jQuery('<div>', {
                 class: 'pick-arw pick-arw-s1 pick-arw-' + i,
-                html: jQuery('<div>', {class: 'pick-i-' + i, html: jQuery(window.dateDropperSetup.icons.arrow[i])})
+                html: jQuery('<div>', {
+                    class: 'pick-i-' + i,
+                    html: jQuery(window.dateDropperSetup.icons.arrow[i])
+                })
             }).appendTo(r);
         }), 'y' == key && jQuery.each(['l', 'r'], function (e, i) {
             jQuery('<div>', {
                 class: 'pick-arw pick-arw-s2 pick-arw-' + i,
-                html: jQuery('<div>', {class: 'pick-i-' + i, html: jQuery(window.dateDropperSetup.icons.arrow[i])})
+                html: jQuery('<div>', {
+                    class: 'pick-i-' + i,
+                    html: jQuery(window.dateDropperSetup.icons.arrow[i])
+                })
             }).appendTo(r);
         }), U(e, key, getCurrent(e, key));
     }, renderPickerLg = function (options) {
@@ -601,13 +788,9 @@
         for (i = 0; i < 42; i++) {
             jQuery('<li>', {html: jQuery('<div>')}).appendTo(getPickerEls(options, '.pick-lg .pick-lg-b'));
         }
-        var t = 0,
-            a = getPickerEls(options, '.pick-lg-b'),
-            firstOfMonth = new Date(getCurrent(options)),
-            date = new Date(getCurrent(options)),
-            getMonthDays = function (e) {
-                var month = e.getMonth(),
-                    year = e.getFullYear();
+        var t = 0, a = getPickerEls(options, '.pick-lg-b'), firstOfMonth = new Date(getCurrent(options)),
+            date = new Date(getCurrent(options)), getMonthDays = function (e) {
+                var month = e.getMonth(), year = e.getFullYear();
                 var februaryDays = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : 28;
                 return [31, februaryDays, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month];
             };
@@ -703,10 +886,10 @@
                 if (value) {
                     var enabledDate = getDate(value);
                     if (enabledDate.m === getCurrent(options, 'm') && enabledDate.y === getCurrent(options, 'y')) {
-                        getPickerEls(options, '.pick-lg .pick-lg-b li.pick-v[data-value="' + enabledDate.d + '"]').removeClass('pick-lk')
+                        getPickerEls(options, '.pick-lg .pick-lg-b li.pick-v[data-value="' + enabledDate.d + '"]').removeClass('pick-lk');
                     }
                 }
-            })
+            });
         }
         if (options.roundtrip) {
             updateRoundTrip(options);
@@ -719,18 +902,7 @@
         });
     }, W = function (e, i) {
         var t, r, a, o;
-        e.element.hasClass('picker-lg') && renderPickerLg(e), r = getCurrent(t = e, 'm'), a = getCurrent(t, 'y'), o = a % 4 == 0 && (a % 100 != 0 || a % 400 == 0), t.key.d.max = [31,
-                                                                                                                                                                                   o ? 29 : 28,
-                                                                                                                                                                                   31,
-                                                                                                                                                                                   30,
-                                                                                                                                                                                   31,
-                                                                                                                                                                                   30,
-                                                                                                                                                                                   31,
-                                                                                                                                                                                   31,
-                                                                                                                                                                                   30,
-                                                                                                                                                                                   31,
-                                                                                                                                                                                   30,
-                                                                                                                                                                                   31][r - 1], getCurrent(t, 'd') > t.key.d.max && (t.key.d.current = t.key.d.max, U(t, 'd', getCurrent(t, 'd'))), getPickerEls(t, '.pick-d li').removeClass('pick-wke').each(function () {
+        e.element.hasClass('picker-lg') && renderPickerLg(e), r = getCurrent(t = e, 'm'), a = getCurrent(t, 'y'), o = a % 4 == 0 && (a % 100 != 0 || a % 400 == 0), t.key.d.max = [31, o ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][r - 1], getCurrent(t, 'd') > t.key.d.max && (t.key.d.current = t.key.d.max, U(t, 'd', getCurrent(t, 'd'))), getPickerEls(t, '.pick-d li').removeClass('pick-wke').each(function () {
             var e = new Date(r + '/' + jQuery(this).attr('value') + '/' + a).getDay();
             jQuery(this).find('span').html(window.dateDropperSetup.languages[t.lang].weekdays.full[e]), 0 != e && 6 != e || jQuery(this).addClass('pick-wke');
         }), t.element.hasClass('picker-lg') && (getPickerEls(t, '.pick-lg-b li').removeClass('pick-wke'), getPickerEls(t, '.pick-lg-b li.pick-v').each(function () {
@@ -788,32 +960,44 @@
         }
     }, Z = function (e) {
         e.element.find('.picker').addClass('picker-rumble');
-    }, ee = function (o, e) {
-        var i = !0;
-        if (o.roundtrip) {
-            i = !1;
-            var t = getRoundtrip(o);
-            if (t) {
-                if (1 < jQuery('.picker-trigger[data-dd-roundtrip="' + o.selector.data('dd-roundtrip') + '"]').length) {
-                    jQuery.each(t, function (e, i) {
-                        var t = i.selector.attr('data-datedropper-id'), r = getDate(i.value), a = getDateObject(o, r);
-                        o.identifier != t && pickers[t] && (pickers[t].key.m.current = r.m, pickers[t].key.d.current = r.d, pickers[t].key.y.current = r.y), i.selector.is('input') && i.selector.val(a.formatted).change();
+    }, ee = function (options, e) {
+        var i;
+        if (options.roundtrip) {
+            i = false;
+            var roundTrip = getRoundtrip(options);
+            var $el = jQuery('.picker-trigger[data-dd-roundtrip="' + options.selector.data('dd-roundtrip') + '"]');
+            if (roundTrip) {
+                var aValue, bValue;
+                if (1 < $el.length) {
+                    jQuery.each(roundTrip, function (which, i) {
+                        var t = i.selector.attr('data-datedropper-id'),
+                            r = getDate(i.value),
+                            a = getDateObject(options, r);
+                        if (which === 'a') {
+                            aValue = parseInt(i.selector.data('ddRoundtripA'));
+                        } else {
+                            bValue = parseInt(i.selector.data('ddRoundtripB'));
+                        }
+                        options.identifier != t && pickers[t] && (pickers[t].key.m.current = r.m, pickers[t].key.d.current = r.d, pickers[t].key.y.current = r.y), i.selector.is('input') && i.selector.val(a.formatted).change();
                     });
                 } else {
-                    var r = getDateObject(o, getDate(t.a.value)), a = getDateObject(o, getDate(t.b.value));
-                    o.selector.val(r.formatted + ' - ' + a.formatted);
+                    var r = getDateObject(options, getDate(roundTrip.a.value)), a = getDateObject(options, getDate(roundTrip.b.value));
+                    aValue = parseInt($el.data('ddRoundtripA'));
+                    bValue = parseInt($el.data('ddRoundtripB'));
+                    options.selector.val(r.formatted + ' - ' + a.formatted);
                 }
-                t.a.value != t.b.value && o.onRoundTripChange && o.onRoundTripChange({
-                    outward: getDate(t.a.value),
-                    return: getDate(t.b.value)
-                }), o.onChange && o.onChange(T(o));
+                var changed = (parseInt(roundTrip.a.value) !== aValue || parseInt(roundTrip.b.value) !== bValue) && roundTrip.a.value !== roundTrip.b.value;
+                changed && options.onRoundTripChange && options.onRoundTripChange({
+                    outward: getDate(roundTrip.a.value),
+                    return: getDate(roundTrip.b.value)
+                }), options.onChange && options.onChange(T(options));
             }
         } else {
-            i = !!e || o.autofill;
+            i = !!e || options.autofill;
         }
         if (i) {
-            var n = getDateObject(o);
-            o.selector.is('input') && o.selector.val(n.formatted).change(), o.changeValueTo && ie(o, n.formatted), o.onChange && o.onChange(T(o));
+            var n = getDateObject(options);
+            options.selector.is('input') && options.selector.val(n.formatted).change(), options.changeValueTo && ie(options, n.formatted), options.onChange && options.onChange(T(options));
         }
     }, ie = function (e, i) {
         var t = jQuery(e.changeValueTo);
