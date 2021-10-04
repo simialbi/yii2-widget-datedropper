@@ -1165,8 +1165,10 @@
         }
     };
     jQuery(document).ready(function () {
-        window.dateDropperSetup.autoInit && jQuery('.datedropper-init,[data-datedropper]').each(function () {
-            jQuery(this).dateDropper();
-        });
+        if (window.dateDropperSetup && window.dateDropperSetup.autoInit) {
+            jQuery('.datedropper-init,[data-datedropper]').each(function () {
+                jQuery(this).dateDropper();
+            });
+        }
     });
 })(jQuery);
