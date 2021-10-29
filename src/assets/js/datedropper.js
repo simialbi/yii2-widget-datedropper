@@ -39,7 +39,7 @@
                         trigger: false,
                         minDate: false,
                         maxDate: false,
-                        autofill: false,
+                        autofill: true,
                         autoIncrease: true,
                         showOnlyEnabledDays: false,
                         changeValueTo: false,
@@ -148,15 +148,15 @@
     var uiEvent;
     if (isTouch()) {
         uiEvent = {
-            i: 'touchstart',
-            m: 'touchmove',
-            e: 'touchend'
+            start: 'touchstart',
+            move: 'touchmove',
+            end: 'touchend'
         };
     } else {
         uiEvent = {
-            i: 'mousedown',
-            m: 'mousemove',
-            e: 'mouseup'
+            start: 'mousedown',
+            move: 'mousemove',
+            end: 'mouseup'
         };
     }
     var getDataOptions = function ($el) {
@@ -524,7 +524,7 @@
             }
         }
         return false;
-    }, F = 'div.datedropper.picker-focused', getDateObject = function (options, date) {
+    }, pickerFocusedSelector = 'div.datedropper.picker-focused', getDateObject = function (options, date) {
         if (!date) {
             date = {
                 d: getCurrent(options, 'd'),
@@ -577,7 +577,7 @@
             });
         }
         return returnValue;
-    }, X = function (options) {
+    }, enlargePicker = function (options) {
         if (options.large) {
             options.element.addClass('picker-transit').toggleClass('picker-lg');
             if (options.element.hasClass('picker-lg') && renderPickerLg(options)) {
@@ -598,7 +598,7 @@
         var date;
         try {
             date = parseDate(options.format, options.selector.val(), options);
-            setCurrent(options, date);
+            setCurrent(options, getDate(getUnix(date)));
         } catch (e) {
             console.log(e);
             date = false;
@@ -696,8 +696,21 @@
         }
         options.selector.on(options.eventListener, function (e) {
             e.preventDefault();
-            jQuery(this).blur();
+            // jQuery(this).blur();
             showPicker(jQuery(this));
+        });
+        options.selector.on('blur', function (e) {
+            picker && hidePicker(picker);
+        });
+        options.selector.on('change', function (e) {
+            try {
+                var date = parseDate(options.format, options.selector.val(), options);
+                if (date) {
+                    setCurrent(options, getDate(getUnix(date)));
+                }
+            } catch (e) {
+                console.log(e);
+            }
         });
         if (options.trigger) {
             jQuery(options.trigger).on('click', function (e) {
@@ -1015,7 +1028,7 @@
             } else if (27 == i) {
                 hidePicker(picker);
             } else if (13 == i) {
-                getPickerEls(picker, '.pick-submit').trigger(uiEvent.i);
+                getPickerEls(picker, '.pick-submit').trigger(uiEvent.start);
             } else if (37 == i || 39 == i) {
                 var t = getPickerEls(picker, '.pick:focus');
                 if (t.length && (37 == i || 39 == i)) {
@@ -1042,12 +1055,13 @@
         }
     }).on('click', function (e) {
         picker && (picker.selector.is(e.target) || picker.element.is(e.target) || 0 !== picker.element.has(e.target).length || (hidePicker(picker), pickerCtrl = null));
-    }).on(animationEvents, F + ' .picker-rumble', function () {
+    }).on(animationEvents, pickerFocusedSelector + ' .picker-rumble', function () {
         jQuery(this).removeClass('picker-rumble');
     }).on(transitionEvents, '.picker-overlay', function () {
         jQuery(this).remove();
-    }).on(uiEvent.i, F + ' .pick-lg li.pick-v', function () {
+    }).on(uiEvent.start, pickerFocusedSelector + ' .pick-lg li.pick-v', function (e) {
         if (picker) {
+            e.preventDefault();
             if (getPickerEls(picker, '.pick-lg-b li').removeClass('pick-sl'), jQuery(this).addClass('pick-sl'), picker.key.d.current = jQuery(this).attr('data-value'), U(picker, 'd', jQuery(this).attr('data-value')), picker.roundtrip) {
                 var i = getRoundtrip(picker), t = getUnix(getCurrent(picker));
                 if (i) {
@@ -1059,17 +1073,20 @@
             }
             W(picker);
         }
-    }).on('mouseleave', F + ' .pick-lg .pick-lg-b li', function () {
+    }).on('mouseleave', pickerFocusedSelector + ' .pick-lg .pick-lg-b li', function () {
         if (picker && picker.roundtrip) {
             updateRoundTrip(picker);
         }
-    }).on('mouseenter', F + ' .pick-lg .pick-lg-b li', function () {
+    }).on('mouseenter', pickerFocusedSelector + ' .pick-lg .pick-lg-b li', function () {
         if (picker && picker.roundtrip) {
             updateRoundTrip(picker, jQuery(this));
         }
-    }).on('click', F + ' .pick-btn-sz', function () {
-        picker && X(picker);
-    }).on(uiEvent.i, F + ' .pick-arw.pick-arw-s2', function (e) {
+    }).on('mousedown', pickerFocusedSelector + ' .pick-btn-sz', function (e) {
+        if (picker) {
+            e.preventDefault();
+            enlargePicker(picker);
+        }
+    }).on(uiEvent.start, pickerFocusedSelector + ' .pick-arw.pick-arw-s2', function (e) {
         if (picker) {
             var i;
             e.preventDefault(), pickerCtrl = null;
@@ -1084,17 +1101,17 @@
             }(picker, 'y', t);
             i > r[r.length - 1] && (i = r[0]), i < r[0] && (i = r[r.length - 1]), picker.key.y.current = i, U(picker, 'y', getCurrent(picker, 'y'));
         }
-    }).on(uiEvent.i, F, function (e) {
+    }).on(uiEvent.start, pickerFocusedSelector, function (e) {
         picker && getPickerEls(picker, '*:focus').blur();
-    }).on(uiEvent.i, F + ' .pick-arw.pick-arw-s1', function (e) {
+    }).on(uiEvent.start, pickerFocusedSelector + ' .pick-arw.pick-arw-s1', function (e) {
         if (picker) {
             e.preventDefault(), pickerCtrl = null;
             var i = jQuery(this).closest('ul').data('k'), t = jQuery(this).hasClass('pick-arw-r') ? 'right' : 'left';
             incDec(picker, i, t);
         }
-    }).on(uiEvent.i, F + ' ul.pick.pick-y li', function () {
+    }).on(uiEvent.start, pickerFocusedSelector + ' ul.pick.pick-y li', function () {
         isClick = !0;
-    }).on(uiEvent.e, F + ' ul.pick.pick-y li', function () {
+    }).on(uiEvent.end, pickerFocusedSelector + ' ul.pick.pick-y li', function () {
         var e;
         picker && (!isClick || (e = picker).jump >= e.key.y.max - e.key.y.min || (!function (t) {
             var e = getPickerEls(t, '.picker-jumped-years');
@@ -1112,16 +1129,16 @@
                 }).appendTo(r);
             }
         }(picker), isClick = !1));
-    }).on(uiEvent.i, F + ' ul.pick.pick-d li', function () {
+    }).on(uiEvent.start, pickerFocusedSelector + ' ul.pick.pick-d li', function () {
         picker && (isClick = !0);
-    }).on(uiEvent.e, F + ' ul.pick.pick-d li', function () {
-        picker && isClick && (X(picker), isClick = !1);
-    }).on(uiEvent.i, F + ' ul.pick', function (e) {
+    }).on(uiEvent.end, pickerFocusedSelector + ' ul.pick.pick-d li', function () {
+        picker && isClick && (enlargePicker(picker), isClick = !1);
+    }).on(uiEvent.start, pickerFocusedSelector + ' ul.pick', function (e) {
         if (picker && (pickerCtrl = jQuery(this))) {
             var i = pickerCtrl.data('k');
             pickDragged = isTouch() ? e.originalEvent.touches[0].pageY : e.pageY, pickDragTemp = getCurrent(picker, i);
         }
-    }).on(uiEvent.m, function (e) {
+    }).on(uiEvent.move, function (e) {
         if (picker && (isClick = !1, pickerCtrl)) {
             e.preventDefault();
             var i = pickerCtrl.data('k'), t = isTouch() ? e.originalEvent.touches[0].pageY : e.pageY;
@@ -1132,9 +1149,9 @@
                 value: r
             });
         }
-    }).on(uiEvent.e, function (e) {
+    }).on(uiEvent.end, function (e) {
         pickerCtrl && (pickDragTemp = pickDragged = pickerCtrl = null, picker && (W(picker), picker.onPickerRelease && picker.onPickerRelease(getDateObject(picker))));
-    }).on(uiEvent.i, F + ' .pick-submit', function () {
+    }).on(uiEvent.start, pickerFocusedSelector + ' .pick-submit', function () {
         picker && (G(picker) || (ee(picker, !0), hidePicker(picker)));
     });
     jQuery(window).on('resize', function () {

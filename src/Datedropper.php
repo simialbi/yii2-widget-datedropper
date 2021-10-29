@@ -125,6 +125,10 @@ class Datedropper extends InputWidget
 
         $this->registerPlugin('dateDropper', $selector);
 
+        if (!isset($this->options['autocomplete'])) {
+            $this->options['autocomplete'] = 'off';
+        }
+
         return ($this->hasModel())
             ? Html::activeInput('text', $this->model, $this->attribute, $this->options)
             : Html::input('text', $this->name, $this->value, $this->options);
