@@ -483,13 +483,6 @@
         // }).appendTo(getPickerEls(e, '.pick-btns'));
         setTimeout(function () {
             e.element.addClass('picker-focused');
-            // if (isTouch() || setTimeout())
-            setTimeout(function () {
-                getPickerEls(e, '.pick:first-of-type').focus();
-            });
-            isTouch() || setTimeout(function () {
-                getPickerEls(e, '.pick:first-of-type').focus();
-            }, 100);
             if (e.element.hasClass('picker-modal')) {
                 e.overlay = jQuery('<div class="picker-overlay"></div>').appendTo('body');
             }
@@ -598,7 +591,6 @@
         var date;
         try {
             date = parseDate(options.format, options.selector.val(), options);
-            setCurrent(options, getDate(getUnix(date)));
         } catch (e) {
             console.log(e);
             date = false;
