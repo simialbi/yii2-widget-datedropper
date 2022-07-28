@@ -37,7 +37,7 @@ class Datedropper extends InputWidget
      * @throws \ReflectionException
      * @throws \yii\base\InvalidConfigException
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -51,7 +51,7 @@ class Datedropper extends InputWidget
     /**
      * {@inheritDoc}
      */
-    public function run()
+    public function run(): string
     {
         $js = Json::htmlEncode([
             'languages' => [
@@ -139,7 +139,7 @@ class Datedropper extends InputWidget
      *
      * @return array
      */
-    protected function getClientOptions()
+    protected function getClientOptions(): array
     {
         $format = ArrayHelper::remove($this->clientOptions, 'format', FormatConverter::convertDateIcuToPhp(Yii::$app->formatter->dateFormat));
 

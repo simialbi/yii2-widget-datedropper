@@ -25,10 +25,10 @@
     },
     "minimum-stability": "stable",
     "require": {
-        "php": ">=5.6",
+        "php": ">=7.3",
         "yiisoft/yii2": "^2.0.20",
         "yiisoft/yii2-bootstrap4": "^2.0.4",
-        "simialbi/yii2-simialbi-base": ">=0.10.2 <1.0 | ^1.0.0"
+        "simialbi/yii2-simialbi-base": ">=0.13.1 <1.0 | ^1.0.0"
     },
     "require-dev": {
         "yiisoft/yii2-coding-standards": "~2.0"
@@ -47,6 +47,11 @@
     "extra": {
         "branch-alias": {
             "dev-master": "1.0.x-dev"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true
         }
     }
 }
